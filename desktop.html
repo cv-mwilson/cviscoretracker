@@ -1106,6 +1106,18 @@ function showToast(msg) {
 }
 
 render();
+
+async function checkNetSuiteStatus() {
+  try {
+    const res = await fetch('/api/health');
+    const { connected } = await res.json();
+    document.getElementById('ns-dot').classList.toggle('on', connected);
+    document.getElementById('ns-label').textContent = connected ? 'NetSuite: Connected' : 'NetSuite: Not connected';
+  } catch {
+    // leave default "Not connected" state
+  }
+}
+checkNetSuiteStatus();
 </script>
 </body>
 </html>

@@ -2,6 +2,11 @@
   functions = "netlify/functions"
 
 [[redirects]]
+  from = "/api/health"
+  to   = "/.netlify/functions/health"
+  status = 200
+
+[[redirects]]
   from = "/api/cores"
   to   = "/.netlify/functions/cores"
   status = 200
