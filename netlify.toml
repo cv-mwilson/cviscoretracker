@@ -1,0 +1,17 @@
+[build]
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/cores"
+  to   = "/.netlify/functions/cores"
+  status = 200
+
+[[redirects]]
+  from = "/api/bin-pickup"
+  to   = "/.netlify/functions/bin-pickup"
+  status = 200
+
+[[redirects]]
+  from = "/api/bank-draw"
+  to   = "/.netlify/functions/bank-draw"
+  status = 200
