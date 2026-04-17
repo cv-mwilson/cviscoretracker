@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f1923">
+<title>Core Bin Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0f1923;
+  --surface:  #162130;
+  --card:     #1c2d3f;
+  --border:   rgba(255,255,255,0.08);
+  --accent:   #00d4aa;
+  --accent2:  #3b82f6;
+  --warn:     #f59e0b;
+  --danger:   #ef4444;
+  --text:     #f0f4f8;
+  --muted:    #7a9bb5;
+  --mono:     'DM Mono', monospace;
+  --head:     'Syne', sans-serif;
+  --body:     'DM Sans', sans-serif;
+  --r:        14px;
+  --rs:       8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  min-height: 100vh;
+  overscroll-behavior: none;
+}
+
+/* ── HEADER ── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15,25,35,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-logo {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.header-logo span { color: var(--accent); }
+.header-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border: 1px solid var(--accent);
+  border-radius: 99px;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+/* ── TAB BAR ── */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  z-index: 100;
+  background: rgba(22,33,48,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px 8px;
+  cursor: pointer;
+  transition: color 0.15s;
+  color: var(--muted);
+  font-family: var(--body);
+  font-size: 10px;
+  font-weight: 500;
+  border: none;
+  background: none;
+  -webkit-appearance: none;
+}
+.tab-item.active { color: var(--accent); }
+.tab-item svg { width: 22px; height: 22px; stroke-width: 1.8; fill: none; stroke: currentColor; }
+.tab-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--danger);
+  position: absolute;
+  top: 8px; right: calc(50% - 14px);
+}
+
+/* ── MAIN SCROLL AREA ── */
+.main {
+  padding: 16px 16px 100px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ── METRIC STRIP ── */
+.metric-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.metric-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent-line, var(--accent));
+}
+.metric-card.warn::before { --accent-line: var(--warn); }
+.metric-card.danger::before { --accent-line: var(--danger); }
+.metric-card.blue::before { --accent-line: var(--accent2); }
+.metric-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.metric-val {
+  font-family: var(--head);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.metric-val.accent { color: var(--accent); }
+.metric-val.warn { color: var(--warn); }
+.metric-val.danger { color: var(--danger); }
+
+/* ── SECTION LABEL ── */
+.section-head {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── CORE CARD ── */
+.core-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+.core-card:active { transform: scale(0.985); }
+.core-card.overdue { border-left: 3px solid var(--danger); }
+.core-card.ok { border-left: 3px solid var(--accent); }
+.core-card.warn-card { border-left: 3px solid var(--warn); }
+
+.core-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.core-so {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent2);
+  font-weight: 500;
+}
+.core-fee {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.core-customer {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.core-model {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.core-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+.badge-green { background: rgba(0,212,170,0.12); color: var(--accent); border: 1px solid rgba(0,212,170,0.25); }
+.badge-warn  { background: rgba(245,158,11,0.12); color: var(--warn);   border: 1px solid rgba(245,158,11,0.25); }
+.badge-danger{ background: rgba(239,68,68,0.12);  color: var(--danger); border: 1px solid rgba(239,68,68,0.25); }
+.badge-blue  { background: rgba(59,130,246,0.12); color: #60a5fa;       border: 1px solid rgba(59,130,246,0.25); }
+.badge-gray  { background: rgba(122,155,181,0.1); color: var(--muted);  border: 1px solid rgba(122,155,181,0.2); }
+.badge-purple{ background: rgba(167,139,250,0.12);color: #a78bfa;       border: 1px solid rgba(167,139,250,0.25); }
+.badge-teal  { background: rgba(20,184,166,0.12); color: #2dd4bf;       border: 1px solid rgba(20,184,166,0.25); }
+
+.days-text {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── SEARCH / FILTER ── */
+.search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.search-input {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  padding: 10px 14px;
+  outline: none;
+  -webkit-appearance: none;
+}
+.search-input::placeholder { color: var(--muted); }
+.search-input:focus { border-color: var(--accent); }
+.filter-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--muted);
+  padding: 10px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  display: flex; align-items: center; gap: 4px;
+  white-space: nowrap;
+}
+.filter-btn.active { color: var(--accent); border-color: var(--accent); }
+
+/* ── BANK CARDS ── */
+.bank-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent2);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.bank-card:active { transform: scale(0.985); }
+.bank-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.bank-avatar {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--head);
+  font-size: 12px;
+  font-weight: 700;
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+.bank-name {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  flex: 1;
+}
+.bank-count {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--accent);
+}
+.bank-models {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* ── INVENTORY TABLE ── */
+.inv-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.inv-model {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+  flex: 1;
+}
+.inv-qty {
+  font-family: var(--head);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 36px;
+  text-align: right;
+}
+.vel-bar-wrap {
+  width: 60px;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.vel-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.vel-bar-fill.med { background: var(--warn); }
+.vel-bar-fill.low { background: var(--muted); }
+
+/* qty progress */
+.qty-bar-wrap { height:5px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;flex:1; }
+.qty-bar-fill { height:100%;border-radius:3px;transition:width 0.3s; }
+.qty-bar-fill.complete { background:var(--accent); }
+.qty-bar-fill.partial  { background:var(--warn); }
+.qty-bar-fill.none     { background:var(--danger); }
+.qty-tag { font-family:var(--mono);font-size:11px;white-space:nowrap; }
+.qty-tag.complete { color:var(--accent); }
+.qty-tag.partial  { color:var(--warn); }
+.qty-tag.none     { color:var(--danger); }
+
+/* ── DRILL VIEW ── */
+.drill-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.back-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.back-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+.drill-title {
+  font-family: var(--head);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  flex: 1;
+}
+
+/* ── RECEIPT LOG MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.modal-sheet {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--border);
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+.modal-title {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+.form-group {
+  margin-bottom: 14px;
+}
+.form-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+.form-input, .form-select {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  padding: 12px 14px;
+  outline: none;
+  -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent); }
+.form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a9bb5' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+.credit-callout {
+  background: rgba(0,212,170,0.08);
+  border: 1px solid rgba(0,212,170,0.2);
+  border-radius: var(--rs);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.credit-callout.half {
+  background: rgba(245,158,11,0.08);
+  border-color: rgba(245,158,11,0.2);
+}
+.credit-label { font-size: 12px; color: var(--muted); }
+.credit-amount { font-family: var(--mono); font-size: 18px; color: var(--accent); font-weight: 500; }
+.credit-amount.half { color: var(--warn); }
+
+.btn-primary {
+  width: 100%;
+  background: var(--accent);
+  color: #0f1923;
+  border: none;
+  border-radius: var(--rs);
+  font-family: var(--head);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 15px;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  -webkit-appearance: none;
+  transition: opacity 0.15s;
+}
+.btn-primary:active { opacity: 0.85; }
+.btn-secondary {
+  width: 100%;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  font-family: var(--body);
+  font-size: 14px;
+  padding: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+  -webkit-appearance: none;
+}
+
+/* ── FAB ── */
+.fab {
+  position: fixed;
+  bottom: calc(70px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 52px; height: 52px;
+  border-radius: 16px;
+  background: var(--accent);
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,212,170,0.35);
+  z-index: 50;
+  transition: transform 0.1s;
+}
+.fab:active { transform: scale(0.92); }
+.fab svg { width: 22px; height: 22px; stroke: #0f1923; fill: none; stroke-width: 2.5; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  left: 16px; right: 16px;
+  background: var(--card);
+  border: 1px solid var(--accent);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--text);
+  z-index: 300;
+  transition: opacity 0.3s, transform 0.3s;
+  display: flex; align-items: center; gap: 10px;
+}
+.toast.hidden { opacity: 0; transform: translateY(10px); pointer-events: none; }
+.toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--muted);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+.empty-text { font-size: 14px; }
+
+/* ── FILTER CHIPS ── */
+.chip-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+.chip-row::-webkit-scrollbar { height: 3px; }
+.chip-row::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+.chip-row::-webkit-scrollbar-track { background: transparent; }
+
+/* Desktop: swap customer chips for a dropdown */
+@media (min-width: 640px) {
+  .chip-row-customers { display: none !important; }
+  .customer-select-wrap { display: flex !important; }
+}
+@media (max-width: 639px) {
+  .customer-select-wrap { display: none !important; }
+  .chip-row-customers { display: flex !important; }
+}
+.chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--card);
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.chip.active { color: var(--accent); border-color: var(--accent); background: rgba(0,212,170,0.08); }
+
+/* ── PAGE TRANSITIONS ── */
+.page { animation: fadeIn 0.18s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.no-scroll { overflow: hidden; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">CVIS <span>Core Bin Tracker</span></div>
+  <div class="header-badge">LIVE</div>
+</div>
+
+<div class="main" id="main"></div>
+
+<div class="tabbar">
+  <button class="tab-item active" onclick="switchTab('outstanding',this)" id="tab-outstanding">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path d="M9 12h6M9 16h4"/></svg>
+    <span id="tab-outstanding-dot" class="tab-dot"></span>
+    Outstanding
+  </button>
+  <button class="tab-item" onclick="switchTab('banked',this)" id="tab-banked">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Banked
+  </button>
+  <button class="tab-item" onclick="switchTab('cvis',this)" id="tab-cvis">
+    <svg viewBox="0 0 24 24"><path d="M5 8h14M5 8a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v0a2 2 0 01-2 2M5 8l1 12a2 2 0 002 2h8a2 2 0 002-2L19 8"/></svg>
+    CVIS Inv.
+  </button>
+</div>
+
+<button class="fab" onclick="openNewReceiptModal()" title="Log new core receipt">
+  <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<div class="toast hidden" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+// Age helpers
+const TODAY = new Date('2026-04-16');
+function monthsOld(saleDateStr) {
+  if (!saleDateStr) return 0;
+  const sale = new Date(saleDateStr);
+  return (TODAY.getFullYear() - sale.getFullYear()) * 12 + (TODAY.getMonth() - sale.getMonth());
+}
+function ageLabel(months) {
+  if (months >= 12) return Math.floor(months/12) + 'yr ' + (months%12) + 'mo old';
+  return months + ' mo old';
+}
+
+// Qty progress helpers
+function qtyStatus(ordered, received) {
+  if (received === 0)        return 'none';
+  if (received >= ordered)   return 'complete';
+  return 'partial';
+}
+function qtyProgressHTML(ordered, received) {
+  if (ordered <= 1 && received === 0) return ''; // don't show bar for single-unit not yet started
+  const pct    = ordered > 0 ? Math.round((received / ordered) * 100) : 0;
+  const status = qtyStatus(ordered, received);
+  const remaining = ordered - received;
+  const label  = status === 'complete'
+    ? `<span class="qty-tag complete">✓ All ${ordered} received</span>`
+    : status === 'none'
+    ? `<span class="qty-tag none">0 of ${ordered} received</span>`
+    : `<span class="qty-tag partial">${received} of ${ordered} received — ${remaining} outstanding</span>`;
+  return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+    <div class="qty-bar-wrap"><div class="qty-bar-fill ${status}" style="width:${pct}%"></div></div>
+    ${label}
+  </div>`;
+}
+
+const PRICES = {
+  T100V:1575,T30:875,T100F:1275,'150BMG':600,'150BMGE':600,'150BMGE21RH6-R':600,
+  '150BMGE21RH6-6':600,'150T':600,SS815:1025,'45MA':1025,ST700:1025,T100B:1275,
+  ST1000:1575,SS100:915,SS825:1025,'150BMP':600,'150BMPE':600,'150BMPD':600,
+  T100D:1275,T50:875,'6-LS-8 RH46-1-R-CV':600,'6-LS-8T RH46-1':600,ST150:600,
+  ST750GBD:1025,'55-35000':600,'55-35038':600,'55-42008':600,'55-33000':600,
+  'ATS83-20311IKM':600,MISC:600
+};
+function corePrice(m){
+  const k=(m||'').replace(/ - CORE CHARGE/i,'').replace(/ CORE CHARGE/i,'').trim();
+  if(PRICES[k])return PRICES[k];
+  for(const pk of Object.keys(PRICES))if(k.toUpperCase().startsWith(pk.toUpperCase()))return PRICES[pk];
+  return 600;
+}
+function fc(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function ini(name){return name.split(/[\s\-]+/).filter(w=>/^[A-Z]/i.test(w)).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+function fd(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+
+const OUTSTANDING = [
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10750,so:'SO24881',model:'150BMP',saleDate:'2025-10-15',qtyOrdered:1,qtyReceived:0},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10751,so:'SO24881',model:'150BMP',saleDate:'2025-10-15',qtyOrdered:1,qtyReceived:0},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10752,so:'SO24882',model:'T30',saleDate:'2025-10-15',qtyOrdered:2,qtyReceived:0},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10753,so:'SO24882',model:'T30',saleDate:'2025-10-15',qtyOrdered:2,qtyReceived:0},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10756,so:'SO24885',model:'150BMP',saleDate:'2025-10-15',qtyOrdered:1,qtyReceived:0},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10768,so:'SO24934',model:'T100D',saleDate:'2025-10-20',qtyOrdered:1,qtyReceived:0},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:11293,so:'SO25699',model:'T50',saleDate:'2025-12-01',qtyOrdered:1,qtyReceived:0},
+  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:10785,so:'SO25111',model:'T30',saleDate:'2025-10-28',qtyOrdered:1,qtyReceived:0},
+  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:11290,so:'SO25110',model:'T100V',saleDate:'2025-10-28',qtyOrdered:1,qtyReceived:0},
+  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:11330,so:'SO25724',model:'T100V',saleDate:'2025-12-15',qtyOrdered:1,qtyReceived:0},
+  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:11436,so:'SO25830',model:'T100V',saleDate:'2026-01-05',qtyOrdered:1,qtyReceived:0},
+  {customer:'Dann Ocean Towing',lastPickup:null,rec:11074,so:'SO25537',model:'T100B',saleDate:'2025-11-10',qtyOrdered:1,qtyReceived:0},
+  {customer:'Davis Marine Service',lastPickup:null,rec:10898,so:'SO25195',model:'150BMG',saleDate:'2025-09-20',qtyOrdered:1,qtyReceived:0},
+  {customer:'Davis Marine Service',lastPickup:null,rec:11180,so:'SO25566',model:'150BMP',saleDate:'2025-11-25',qtyOrdered:1,qtyReceived:0},
+  {customer:'Davis Marine Service',lastPickup:null,rec:11439,so:'SO25955',model:'T100V',saleDate:'2026-02-10',qtyOrdered:3,qtyReceived:0},
+  {customer:'Davis Marine Service',lastPickup:null,rec:11440,so:'SO25955',model:'T100V',saleDate:'2026-02-10',qtyOrdered:3,qtyReceived:0},
+  {customer:'Davis Marine Service',lastPickup:null,rec:11441,so:'SO25955',model:'T100V',saleDate:'2026-02-10',qtyOrdered:3,qtyReceived:0},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10690,so:'SO24620',model:'150BMGE21RH6-R',saleDate:'2025-10-10',qtyOrdered:3,qtyReceived:0},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10691,so:'SO24620',model:'150BMGE21RH6-R',saleDate:'2025-10-10',qtyOrdered:3,qtyReceived:0},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10692,so:'SO24626',model:'150BMGE21RH6-R',saleDate:'2025-10-12',qtyOrdered:1,qtyReceived:0},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10774,so:'SO25018',model:'T100B',saleDate:'2025-10-25',qtyOrdered:1,qtyReceived:0},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:11043,so:'SO25246',model:'SS815',saleDate:'2025-11-01',qtyOrdered:2,qtyReceived:0},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:11044,so:'SO25246',model:'SS815',saleDate:'2025-11-01',qtyOrdered:2,qtyReceived:0},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:11064,so:'SO25324',model:'MISC',saleDate:'2025-11-08',qtyOrdered:1,qtyReceived:0},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11066,so:'SO25358',model:'T100V',saleDate:'2025-11-12',qtyOrdered:3,qtyReceived:0},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11067,so:'SO25358',model:'T100V',saleDate:'2025-11-12',qtyOrdered:3,qtyReceived:0},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11068,so:'SO25358',model:'T100V',saleDate:'2025-11-12',qtyOrdered:3,qtyReceived:0},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11071,so:'SO25359',model:'T100B',saleDate:'2025-11-12',qtyOrdered:1,qtyReceived:0},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11431,so:'SO25764',model:'SS825',saleDate:'2026-01-20',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10660,so:'SO24180',model:'SS815',saleDate:'2025-09-05',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10661,so:'SO24180',model:'SS815',saleDate:'2025-09-05',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10681,so:'SO24541',model:'T100B',saleDate:'2025-09-28',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10682,so:'SO24541',model:'T100B',saleDate:'2025-09-28',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10689,so:'SO24595',model:'T30',saleDate:'2025-10-02',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10693,so:'SO24633',model:'150BMG',saleDate:'2025-10-05',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10743,so:'SO24814',model:'SS815',saleDate:'2025-10-18',qtyOrdered:4,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10744,so:'SO24814',model:'SS815',saleDate:'2025-10-18',qtyOrdered:4,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10745,so:'SO24814',model:'T100B',saleDate:'2025-10-18',qtyOrdered:4,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10746,so:'SO24814',model:'T100B',saleDate:'2025-10-18',qtyOrdered:4,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10446,so:'SO22178',model:'T100B',saleDate:'2025-04-10',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10464,so:'SO22368',model:'150BMG',saleDate:'2025-04-22',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10479,so:'SO22416',model:'150T',saleDate:'2025-04-28',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:10699,so:'SO24641',model:'150BMP',saleDate:'2025-10-08',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:11442,so:'SO25990',model:'',saleDate:'2026-02-20',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:11443,so:'SO25990',model:'',saleDate:'2026-02-20',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:11444,so:'SO25990',model:'',saleDate:'2026-02-20',qtyOrdered:1,qtyReceived:0},
+  {customer:'USA Compression: Montrose',lastPickup:'11/4/2025',rec:10722,so:'SO24713',model:'T100B',saleDate:'2025-10-15',qtyOrdered:1,qtyReceived:0},
+  {customer:'USA Compression: Montrose',lastPickup:'11/4/2025',rec:10729,so:'SO24736',model:'T100B',saleDate:'2025-10-17',qtyOrdered:1,qtyReceived:0},
+  {customer:'Williams Gas - Fort Beeler',lastPickup:'11/4/2025',rec:11446,so:'SO25999',model:'SS825',saleDate:'2026-02-22',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:10786,so:'SO25119',model:'150T',saleDate:'2025-10-30',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11174,so:'SO25541',model:'SS815',saleDate:'2025-11-18',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11175,so:'SO25545',model:'45MA',saleDate:'2025-11-18',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11176,so:'SO25541',model:'SS815',saleDate:'2025-11-18',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11182,so:'SO25394',model:'ST700',saleDate:'2025-11-05',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11183,so:'SO25394',model:'ST700',saleDate:'2025-11-05',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11291,so:'SO25686',model:'T100B',saleDate:'2025-12-08',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11328,so:'SO25723',model:'ST1000',saleDate:'2025-12-12',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11329,so:'SO25723',model:'ST1000',saleDate:'2025-12-12',qtyOrdered:2,qtyReceived:0},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11454,so:'SO26085',model:'SS100',saleDate:'2026-03-01',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11184,so:'SO25600',model:'T100V',saleDate:'2025-11-28',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11292,so:'SO25693',model:'T30',saleDate:'2025-12-05',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11437,so:'SO25852',model:'T100F',saleDate:'2026-01-15',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11447,so:'SO26002',model:'T100F',saleDate:'2026-02-18',qtyOrdered:1,qtyReceived:0},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11453,so:'SO26041',model:'150BMG',saleDate:'2026-02-25',qtyOrdered:1,qtyReceived:0},
+];
+OUTSTANDING.forEach(c=>{c.fee=corePrice(c.model)});
+
+const BANKED = [
+  {customer:'Centerline - New York',corp:'Centerline (Corporate)',model:'6-LS-8 RH46-1-R-CV',serial:'69317',dateCreated:'10/30/2025'},
+  {customer:'Centerline - New York',corp:'Centerline (Corporate)',model:'T100V',serial:'N/A',dateCreated:'10/30/2025'},
+  {customer:'Cleveland Brothers CAT - Hunker/New Stanton',corp:'Cleveland Brothers CAT (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Cleveland Brothers CAT - Hunker/New Stanton',corp:'Cleveland Brothers CAT (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'Electric Starter Core',serial:'N/A',dateCreated:'3/27/2026'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'N/A',dateCreated:'3/27/2026'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'',dateCreated:'4/2/2026'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMG',serial:'',dateCreated:'4/2/2026'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'1214 56116',dateCreated:'2/27/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'1005 283',dateCreated:'2/27/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'rkl 39862',dateCreated:'2/27/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'1001 143',dateCreated:'2/27/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'NA',dateCreated:'2/27/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'140803-3',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'ST1000',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'190425-3',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'23249',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'26883',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'M6364',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'170516-3',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'1403-214',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'181115-2',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'10007',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'SS100',serial:'SP160422018',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'321172',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMG',serial:'20072120',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'27903',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NH22010',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'28280',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'160722-4',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'1409-1125',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMGE21RH6-6',serial:'SP060315078',dateCreated:'1/8/2025'},
+  {customer:'USA Compression: Beallsville',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Beallsville',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Beallsville',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ST150',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ST750GBD03L32',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35000',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35000',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35000',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'6-LS-8T RH46-1',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'6-LS-8T RH46-1',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ATS83-20311IKM',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'73024F',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'2207 0728',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'MISC',serial:'0918-7075',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35038',serial:'67778',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-42008',serial:'66935',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ST150',serial:'SP230410010',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'SS100',serial:'',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'SS100',serial:'',dateCreated:'11/24/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'35064',dateCreated:'1/30/2026'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'35170',dateCreated:'1/30/2026'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'35439',dateCreated:'1/30/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'T100V',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'T100V',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'SS825',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'SS825',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'SS825',serial:'',dateCreated:'2/9/2026'},
+  {customer:'McAllister - Puerto Rico',corp:'McAllister (Corporate)',model:'T100B',serial:'',dateCreated:'4/16/2026'},
+];
+
+const CVIS_INV = [
+  {model:'T30',total:47,preEngage:11,inertia:35,vol12:70},
+  {model:'T6',total:11,preEngage:11,inertia:0,vol12:4},
+  {model:'T7',total:5,preEngage:5,inertia:0,vol12:2},
+  {model:'T100V',total:37,preEngage:37,inertia:0,vol12:368},
+  {model:'150BMPD',total:72,preEngage:72,inertia:0,vol12:102},
+  {model:'150BMGE',total:34,preEngage:0,inertia:34,vol12:143},
+  {model:'SS800',total:51,preEngage:48,inertia:3,vol12:58},
+  {model:'52-S',total:25,preEngage:0,inertia:25,vol12:2},
+  {model:'52-D',total:1,preEngage:0,inertia:1,vol12:0},
+  {model:'150BMPE',total:10,preEngage:10,inertia:0,vol12:79},
+  {model:'T100B',total:10,preEngage:0,inertia:10,vol12:50},
+  {model:'T50',total:1,preEngage:1,inertia:0,vol12:15},
+  {model:'LS-8',total:16,preEngage:16,inertia:0,vol12:3},
+  {model:'55-35',total:11,preEngage:0,inertia:11,vol12:0},
+  {model:'55-40',total:2,preEngage:0,inertia:2,vol12:0},
+  {model:'55-42',total:5,preEngage:5,inertia:0,vol12:0},
+  {model:'59T',total:7,preEngage:0,inertia:0,vol12:0},
+  {model:'SS100',total:7,preEngage:7,inertia:0,vol12:13},
+  {model:'SS350',total:2,preEngage:2,inertia:0,vol12:11},
+  {model:'LS-16',total:6,preEngage:0,inertia:6,vol12:0},
+  {model:'SM-250',total:15,preEngage:0,inertia:15,vol12:0},
+  {model:'SM-19000',total:1,preEngage:0,inertia:1,vol12:0},
+  {model:'5BM',total:5,preEngage:2,inertia:1,vol12:0},
+  {model:'ST650',total:3,preEngage:3,inertia:0,vol12:0},
+  {model:'Small Switzer',total:3,preEngage:0,inertia:3,vol12:0},
+  {model:'Large Switzer',total:3,preEngage:0,inertia:3,vol12:0},
+  {model:'ATS577',total:1,preEngage:0,inertia:1,vol12:0},
+  {model:'LS-23',total:3,preEngage:3,inertia:0,vol12:0},
+  {model:'45MA',total:3,preEngage:3,inertia:0,vol12:0},
+  {model:'150T',total:1,preEngage:1,inertia:0,vol12:0},
+  {model:'ST150',total:2,preEngage:2,inertia:0,vol12:0},
+  {model:'ST400',total:1,preEngage:1,inertia:0,vol12:0},
+];
+const maxVol = Math.max(...CVIS_INV.map(c=>c.vol12));
+
+let currentTab = 'outstanding';
+let drillCustomer = null;
+let outFilter = 'all';
+let outSearch = '';
+let cvisFilter = 'all';
+let cvisSearch = '';
+
+function switchTab(tab, el) {
+  currentTab = tab;
+  drillCustomer = null;
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function render() {
+  const m = document.getElementById('main');
+  if (currentTab === 'outstanding') m.innerHTML = renderOutstanding();
+  else if (currentTab === 'banked') {
+    if (drillCustomer) m.innerHTML = renderBankDrill(drillCustomer);
+    else m.innerHTML = renderBanked();
+  } else m.innerHTML = renderCVIS();
+}
+
+function renderOutstanding() {
+  const tf = OUTSTANDING.reduce((a,c)=>a+c.fee,0);
+  const noPickup = OUTSTANDING.filter(c=>!c.lastPickup).length;
+  const customers = [...new Set(OUTSTANDING.map(c=>c.customer))].sort();
+
+  const sixMonthsOld = OUTSTANDING.filter(c => monthsOld(c.saleDate) >= 6).length;
+
+  let filtered = OUTSTANDING.filter(c => {
+    const q = outSearch.toLowerCase();
+    if (q && !(c.customer+c.model+c.so).toLowerCase().includes(q)) return false;
+    if (outFilter === 'nopickup' && c.lastPickup) return false;
+    if (outFilter === 'sixmonths' && monthsOld(c.saleDate) < 6) return false;
+    if (outFilter !== 'all' && outFilter !== 'nopickup' && outFilter !== 'sixmonths' && c.customer !== outFilter) return false;
+    return true;
+  });
+
+  return `<div class="page">
+    <div class="metric-strip">
+      <div class="metric-card"><div class="metric-lbl">Outstanding</div><div class="metric-val">${OUTSTANDING.length}</div></div>
+      <div class="metric-card blue"><div class="metric-lbl">Fees held</div><div class="metric-val accent" style="font-size:20px">${fc(tf)}</div></div>
+      <div class="metric-card warn"><div class="metric-lbl">No pickup</div><div class="metric-val warn">${noPickup}</div></div>
+      <div class="metric-card danger" style="--accent-line:var(--danger)"><div class="metric-lbl">Over 6 months</div><div class="metric-val danger">${sixMonthsOld}</div></div>
+    </div>
+    <div class="search-row">
+      <input class="search-input" type="search" placeholder="Search SO, customer, model…" id="out-search-input" oninput="handleOutSearch(this.value)">
+    </div>
+    <div class="chip-row" id="out-chip-row">
+      <button class="chip ${outFilter==='all'?'active':''}" onclick="setOutFilter('all')">All (${OUTSTANDING.length})</button>
+      <button class="chip ${outFilter==='nopickup'?'active':''}" onclick="setOutFilter('nopickup')">No pickup (${noPickup})</button>
+      <button class="chip ${outFilter==='sixmonths'?'active':''}" onclick="setOutFilter('sixmonths')" style="${outFilter==='sixmonths'?'':'color:var(--danger);border-color:rgba(239,68,68,0.4);'}">⚠ Over 6 months (${sixMonthsOld})</button>
+    </div>
+    <div class="chip-row chip-row-customers" id="out-chip-customers">
+      ${customers.map(c=>`<button class="chip ${outFilter===c?'active':''}" onclick="setOutFilter('${c.replace(/'/g,"\'")}')"> ${c.split(' - ')[0]}</button>`).join('')}
+    </div>
+    <div class="customer-select-wrap" style="display:none;margin-bottom:14px;gap:8px;align-items:center;">
+      <label style="font-family:var(--mono);font-size:10px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;white-space:nowrap;">Customer</label>
+      <select class="form-select" style="flex:1;height:34px;padding:6px 32px 6px 12px;font-size:13px;" onchange="setOutFilter(this.value)">
+        <option value="all">All customers</option>
+        ${customers.map(c=>`<option value="${c}" ${outFilter===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div id="out-cards">
+    ${filtered.length === 0 ? '<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No cores match this filter</div></div>' :
+      filtered.map(c => {
+        const noP = !c.lastPickup;
+        const oldP = c.lastPickup && new Date(c.lastPickup) < new Date('2025-01-01');
+        const cls = noP ? 'overdue' : oldP ? 'warn-card' : 'ok';
+        const credit = fc(c.fee);
+        const mo = monthsOld(c.saleDate);
+        const ageOver6 = mo >= 6;
+        const ageBadge = ageOver6 ? `<span class="badge badge-danger" style="margin-left:6px">⚠ ${ageLabel(mo)}</span>` : (mo >= 3 ? `<span class="badge badge-warn" style="margin-left:6px">${ageLabel(mo)}</span>` : '');
+        const qtyBar   = qtyProgressHTML(c.qtyOrdered || 1, c.qtyReceived || 0);
+        const isMulti  = (c.qtyOrdered || 1) > 1;
+        return `<div class="core-card ${cls}" onclick="openReceiveModal('${c.rec}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},'${c.lastPickup||''}',${c.qtyOrdered||1},${c.qtyReceived||0})">
+          <div class="core-card-top">
+            <div class="core-so">${c.so}${isMulti ? ` <span class="badge badge-blue" style="margin-left:6px">Qty ${c.qtyOrdered}</span>` : ''}</div>
+            <div class="core-fee">${fc(c.fee)}</div>
+          </div>
+          <div class="core-customer">${c.customer}</div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:2px">
+            <div class="core-model">${c.model||'<span style="color:var(--danger)">Model unknown</span>'}</div>
+            ${ageBadge}
+          </div>
+          ${qtyBar}
+          <div class="core-card-bottom" style="margin-top:${qtyBar?'8px':'0'}">
+            <span class="badge ${noP?'badge-danger':oldP?'badge-warn':'badge-green'}">${noP?'No pickup on record':oldP?'Pickup: '+fd(c.lastPickup):'Last: '+fd(c.lastPickup)}</span>
+            <span class="days-text">Rec #${c.rec}</span>
+          </div>
+        </div>`;
+      }).join('')
+    }
+  </div>`;
+}
+
+function renderBanked() {
+  const byC = {};
+  BANKED.forEach(b => {
+    if (!byC[b.customer]) byC[b.customer] = {customer:b.customer,corp:b.corp,cores:[],models:{}};
+    byC[b.customer].cores.push(b);
+    byC[b.customer].models[b.model] = (byC[b.customer].models[b.model]||0)+1;
+  });
+  const custs = Object.values(byC).sort((a,b)=>b.cores.length-a.cores.length);
+
+  return `<div class="page">
+    <div class="metric-strip">
+      <div class="metric-card"><div class="metric-lbl">Customers</div><div class="metric-val">${custs.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Total banked</div><div class="metric-val accent">${BANKED.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Right container</div><div class="metric-val" style="font-size:14px;padding-top:4px">Active</div></div>
+      <div class="metric-card"><div class="metric-lbl">W/ serial #</div><div class="metric-val">${BANKED.filter(b=>b.serial&&b.serial!=='NA'&&b.serial!=='N/A'&&b.serial.trim()).length}</div></div>
+    </div>
+    <div class="section-head">Customer core banks — right container</div>
+    ${custs.map(b => `
+      <div class="bank-card" onclick="drillCustomer='${b.customer.replace(/'/g,"\\'")}';render()">
+        <div class="bank-header">
+          <div class="bank-avatar">${ini(b.customer)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="bank-name">${b.customer}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${b.corp}</div>
+          </div>
+          <div class="bank-count">${b.cores.length}</div>
+        </div>
+        <div class="bank-models">
+          ${Object.entries(b.models).slice(0,6).map(([m,n])=>`<span class="badge badge-teal">${m} ×${n}</span>`).join('')}
+          ${Object.keys(b.models).length>6?`<span class="badge badge-gray">+${Object.keys(b.models).length-6} more</span>`:''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderBankDrill(customer) {
+  const rows = BANKED.filter(b=>b.customer===customer);
+  const models = {};
+  rows.forEach(r=>{models[r.model]=(models[r.model]||0)+1});
+  const withSerial = rows.filter(r=>r.serial&&r.serial!=='NA'&&r.serial!=='N/A'&&r.serial.trim()).length;
+
+  return `<div class="page">
+    <div class="drill-header">
+      <button class="back-btn" onclick="drillCustomer=null;render()">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="drill-title">${customer}</div>
+    </div>
+    <div class="metric-strip">
+      <div class="metric-card"><div class="metric-lbl">Banked</div><div class="metric-val accent">${rows.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Models</div><div class="metric-val">${Object.keys(models).length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">W/ serial</div><div class="metric-val">${withSerial}</div></div>
+      <div class="metric-card warn"><div class="metric-lbl">No serial</div><div class="metric-val warn">${rows.length-withSerial}</div></div>
+    </div>
+    <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#7a9bb5;line-height:1.5;">
+      Tap <strong style="color:#60a5fa">Use for SO</strong> on any core below to apply it to a new sales order. This marks the core as received on that SO and flips its status to Applied — no credit email is sent since this customer is not charged upfront.
+    </div>
+    <div class="section-head">Individual records — tap to use for a sales order</div>
+    ${rows.map((r,idx)=>{
+      const hasSerial = r.serial&&r.serial!=='NA'&&r.serial!=='N/A'&&r.serial.trim();
+      return `<div class="core-card ok" style="border-left-color:var(--accent2)">
+        <div class="core-card-top">
+          <div class="core-so" style="color:#60a5fa">${r.model}</div>
+          <span class="badge badge-teal">Banked</span>
+        </div>
+        <div style="font-family:var(--mono);font-size:11px;color:${hasSerial?'var(--muted)':'var(--danger)'};margin:4px 0 8px;">${hasSerial?'S/N: '+r.serial:'No serial on record'}</div>
+        <div class="core-card-bottom">
+          <span class="days-text">Logged ${fd(r.dateCreated)}</span>
+          <button class="badge badge-blue" style="cursor:pointer;padding:5px 12px;font-size:11px;border:none;" onclick="openBankDrawModal('${r.model.replace(/'/g,"\'")}','${(r.serial||'').replace(/'/g,"\'")}','${customer.replace(/'/g,"\'")}')">Use for SO →</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderCVIS() {
+  const totalCores = CVIS_INV.reduce((a,c)=>a+c.total,0);
+  const highVel = CVIS_INV.filter(c=>c.vol12>=50).length;
+
+  let filtered = CVIS_INV.filter(c => {
+    if (cvisSearch && !c.model.toLowerCase().includes(cvisSearch.toLowerCase())) return false;
+    if (cvisFilter === 'highvol' && c.vol12 < 50) return false;
+    if (cvisFilter === 'pre' && c.preEngage === 0) return false;
+    if (cvisFilter === 'inertia' && c.inertia === 0) return false;
+    return true;
+  });
+
+  return `<div class="page">
+    <div class="metric-strip">
+      <div class="metric-card"><div class="metric-lbl">Total cores</div><div class="metric-val accent">${totalCores}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Models</div><div class="metric-val">${CVIS_INV.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">High velocity</div><div class="metric-val good" style="color:var(--accent)">${highVel}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Container</div><div class="metric-val" style="font-size:13px;padding-top:4px">Left</div></div>
+    </div>
+    <div class="search-row">
+      <input class="search-input" type="search" placeholder="Search model…" id="cvis-search-input" oninput="handleCvisSearch(this.value)">
+    </div>
+    <div class="chip-row" id="cvis-chip-row">
+      <button class="chip ${cvisFilter==='all'?'active':''}" onclick="setCvisFilter('all')">All</button>
+      <button class="chip ${cvisFilter==='highvol'?'active':''}" onclick="setCvisFilter('highvol')">High velocity</button>
+      <button class="chip ${cvisFilter==='pre'?'active':''}" onclick="setCvisFilter('pre')">Pre-engage</button>
+      <button class="chip ${cvisFilter==='inertia'?'active':''}" onclick="setCvisFilter('inertia')">Inertia</button>
+    </div>
+    <div class="section-head">Left container — CVIS owned</div>
+    <div id="cvis-cards">
+    ${filtered.map(c=>{
+      const pct = maxVol>0?Math.round((c.vol12/maxVol)*100):0;
+      const velCls = c.vol12>=50?'':'med';
+      const velBadge = c.vol12>=50?'badge-green':c.vol12>=10?'badge-warn':'badge-gray';
+      const velText = c.vol12>=50?'High vel':c.vol12>=10?'Med vel':'Low vel';
+      return `<div class="inv-row">
+        <div style="flex:1;min-width:0">
+          <div class="inv-model">${c.model}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+            <span class="badge ${velBadge}">${velText}</span>
+            ${c.vol12>0?`<div class="vel-bar-wrap"><div class="vel-bar-fill ${velCls}" style="width:${pct}%"></div></div><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${c.vol12}/yr</span>`:''}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="inv-qty">${c.total}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${c.preEngage>0?c.preEngage+' PE':''} ${c.inertia>0?c.inertia+' IN':''}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── Workflow A: Bin pickup — core arriving from customer's bin ──────────────
+// ── FAB: open a blank receipt form (no pre-fill) ───────────────────────────
+function openNewReceiptModal() {
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Log Core Receipt</div>
+        <div style="background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+          <strong style="color:var(--accent)">New receipt</strong><br>
+          Fill in the details from the core you just received. This mirrors your FastFields Core Receiving Log.
+        </div>
+        <div class="form-group">
+          <label class="form-label">From customer</label>
+          <input class="form-input" id="nr-customer" type="text" placeholder="Customer name" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reference number (SO / Invoice / Quote)</label>
+          <input class="form-input" id="nr-so" type="text" placeholder="e.g. SO25537" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Model number</label>
+          <input class="form-input" id="nr-model" type="text" placeholder="e.g. T100V" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Serial number</label>
+          <input class="form-input" id="nr-serial" type="text" placeholder="Leave blank if unknown" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Destination</label>
+          <select class="form-select" id="nr-dest">
+            <option value="MASCO">MASCO core (standard sales order)</option>
+            <option value="CVIS">CVIS core (left container — CVIS owned)</option>
+            <option value="Hold">Hold shelf (repair / reclock estimate)</option>
+            <option value="Warranty">Warranty bin (needs analysis)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Received by</label>
+          <input class="form-input" id="nr-by" type="text" placeholder="Your name" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes / condition</label>
+          <input class="form-input" id="nr-notes" type="text" placeholder="Any damage, missing parts, special instructions…" autocomplete="off">
+        </div>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;">
+          NetSuite not connected yet — once integrated, submitting will auto-update the SO, Invoice, and Quote and notify AP/AR if a credit is due.
+        </div>
+        <button class="btn-primary" onclick="submitNewReceipt()">Submit receipt</button>
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.classList.add('no-scroll');
+}
+
+function submitNewReceipt() {
+  const so   = document.getElementById('nr-so').value.trim();
+  const model = document.getElementById('nr-model').value.trim();
+  const cust = document.getElementById('nr-customer').value.trim();
+  const dest = document.getElementById('nr-dest').value;
+  if (!so && !cust) { showToast('Please enter at least a reference number or customer name.'); return; }
+  closeModal();
+  const destLabels = { MASCO:'MASCO core', CVIS:'CVIS core', Hold:'Hold shelf', Warranty:'Warranty bin' };
+  showToast('Receipt logged' + (so?' for '+so:'') + ' → ' + (destLabels[dest]||dest) + '. Update NetSuite once connected.');
+}
+
+// ── Pre-filled receipt modal (tapped from a core card) ─────────────────────
+function openReceiveModal(rec, so, customer, model, fee, lastPickup, qtyOrdered, qtyReceived) {
+  qtyOrdered  = qtyOrdered  || 1;
+  qtyReceived = qtyReceived || 0;
+  const qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
+  const isMulti = qtyOrdered > 1;
+  const creditFull = fee || 0;
+  const creditHalf = (creditFull * 0.5).toFixed(2);
+  // We can't know exact days without sale date in this context,
+  // so show both possibilities and let AP/AR confirm
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Log Core Receipt</div>
+        <div style="background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+          <strong style="color:var(--accent)">Workflow: Bin Pickup</strong><br>
+          Core arriving from customer's bin. FastFields form will auto-log this receipt. AP/AR will receive a credit notification email at account@cardinalvalley.com.
+        </div>
+        ${isMulti ? `
+        <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:12px 14px;margin-bottom:12px;">
+          <div style="font-family:var(--mono);font-size:10px;color:#60a5fa;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">Core quantity on this order</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div class="qty-bar-wrap"><div class="qty-bar-fill ${qtyReceived>=qtyOrdered?'complete':'partial'}" style="width:${Math.round((qtyReceived/qtyOrdered)*100)}%"></div></div>
+            <span class="qty-tag ${qtyReceived>=qtyOrdered?'complete':'partial'}" style="font-size:13px;">${qtyReceived} of ${qtyOrdered} received</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">${qtyRemaining} core${qtyRemaining!==1?'s':''} still outstanding after this receipt</div>
+        </div>` : ''}
+        ${creditFull > 0 ? `
+        <div class="credit-callout">
+          <div>
+            <div class="credit-label">${isMulti ? 'Per-core fee' : 'Core fee on SO'}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${customer||''}</div>
+          </div>
+          <div class="credit-amount">${fc(isMulti ? creditFull/qtyOrdered : creditFull)}</div>
+        </div>` : ''}
+        <div class="form-group">
+          <label class="form-label">Sales order / reference #</label>
+          <input class="form-input" id="bp-so" type="text" value="${so||''}" placeholder="SO25537">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Model number</label>
+          <input class="form-input" id="bp-model" type="text" value="${model||''}" placeholder="T100V">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Serial number</label>
+          <input class="form-input" id="bp-serial" type="text" placeholder="Leave blank if unknown">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Destination</label>
+          <select class="form-select" id="bp-dest">
+            <option value="MASCO">MASCO core (standard)</option>
+            <option value="CVIS">CVIS core (left container)</option>
+            <option value="Hold">Hold shelf (repair / reclock estimate)</option>
+            <option value="Warranty">Warranty bin (needs analysis)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Received by</label>
+          <input class="form-input" id="bp-by" type="text" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes / condition</label>
+          <input class="form-input" id="bp-notes" type="text" placeholder="Any damage, missing parts…">
+        </div>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px">
+          NetSuite not connected yet — submit will log locally. Once integrated: SO, Invoice & Quote auto-update and AP/AR email fires automatically.
+        </div>
+        <button class="btn-primary" onclick="submitBinPickup('${so||''}','${customer.replace(/'/g,"\'")}','${model.replace(/'/g,"\'")}',${creditFull},${qtyOrdered},${qtyReceived})">Submit — log 1 core receipt</button>
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.classList.add('no-scroll');
+}
+
+function submitBinPickup(so, customer, model, fee, qtyOrdered, qtyReceived) {
+  qtyOrdered  = qtyOrdered  || 1;
+  qtyReceived = qtyReceived || 0;
+  const newReceived  = qtyReceived + 1;
+  const remaining    = Math.max(0, qtyOrdered - newReceived);
+  const isMulti      = qtyOrdered > 1;
+  closeModal();
+  const qtyMsg = isMulti
+    ? ` (${newReceived} of ${qtyOrdered} cores — ${remaining} still outstanding)`
+    : '';
+  showToast('Core logged for ' + (so||'SO') + qtyMsg + '. AP/AR notified once NetSuite connected.');
+}
+
+// ── Workflow B: Bank draw — pulling banked core for a new sales order ───────
+function openBankDrawModal(model, serial, customer) {
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Use Banked Core for Sales Order</div>
+        <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+          <strong style="color:#60a5fa">Workflow: Bank Draw</strong><br>
+          This core is already at CVIS. Applying it to a new SO marks it as Core Received on that order and flips its status to Applied. No FastFields form. No credit email — ${customer} is not charged upfront.
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+          <div style="font-family:var(--mono);font-size:13px;color:var(--text);font-weight:500;">${model}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px;">${serial?'S/N: '+serial:'No serial on record'}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;">Owner: ${customer}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apply to sales order #</label>
+          <input class="form-input" id="bd-so" type="text" placeholder="SO26001" autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Applied by</label>
+          <input class="form-input" id="bd-by" type="text" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <input class="form-input" id="bd-notes" type="text" placeholder="Optional notes…">
+        </div>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px">
+          NetSuite not connected yet — once integrated: new SO marked Core Received, Core Bank status → Applied, both happen instantly.
+        </div>
+        <button class="btn-primary" onclick="submitBankDraw('${model.replace(/'/g,"\'")}','${customer.replace(/'/g,"\'")}')">Apply to Sales Order</button>
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.classList.add('no-scroll');
+}
+
+function submitBankDraw(model, customer) {
+  const so = document.getElementById('bd-so').value.trim();
+  if (!so) { showToast('Please enter a sales order number.'); return; }
+  closeModal();
+  showToast(model + ' applied to ' + so + '. Core Bank status → Applied once NetSuite is connected.');
+}
+
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+  document.body.classList.remove('no-scroll');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.remove('hidden');
+  setTimeout(()=>t.classList.add('hidden'), 4000);
+}
+
+// ── Search handlers — update state and re-render ONLY the list, not the input ──
+let outSearchTimer = null;
+let cvisSearchTimer = null;
+
+function handleOutSearch(val) {
+  outSearch = val;
+  // Re-render just the cards container, not the whole page
+  renderOutstandingCards();
+}
+
+function handleCvisSearch(val) {
+  cvisSearch = val;
+  renderCvisCards();
+}
+
+function renderOutstandingCards() {
+  const container = document.getElementById('out-cards');
+  if (!container) { render(); return; }
+  let filtered = OUTSTANDING.filter(c => {
+    const q = outSearch.toLowerCase();
+    if (q && !(c.customer+c.model+c.so).toLowerCase().includes(q)) return false;
+    if (outFilter === 'nopickup' && c.lastPickup) return false;
+    if (outFilter === 'sixmonths' && monthsOld(c.saleDate) < 6) return false;
+    if (outFilter !== 'all' && outFilter !== 'nopickup' && outFilter !== 'sixmonths' && c.customer !== outFilter) return false;
+    return true;
+  });
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No cores match this filter</div></div>';
+    return;
+  }
+  container.innerHTML = filtered.map(c => {
+    const noP = !c.lastPickup;
+    const oldP = c.lastPickup && new Date(c.lastPickup) < new Date('2025-01-01');
+    const cls = noP ? 'overdue' : oldP ? 'warn-card' : 'ok';
+    const mo = monthsOld(c.saleDate);
+    const ageOver6 = mo >= 6;
+    const ageBadge = ageOver6
+      ? `<span class="badge badge-danger" style="margin-left:6px">⚠ ${ageLabel(mo)}</span>`
+      : (mo >= 3 ? `<span class="badge badge-warn" style="margin-left:6px">${ageLabel(mo)}</span>` : '');
+    const qtyBar  = qtyProgressHTML(c.qtyOrdered || 1, c.qtyReceived || 0);
+    const isMulti = (c.qtyOrdered || 1) > 1;
+    return `<div class="core-card ${cls}" onclick="openReceiveModal('${c.rec}','${c.so}','${c.customer.replace(/'/g,"\'")}','${c.model}',${c.fee},'${c.lastPickup||''}',${c.qtyOrdered||1},${c.qtyReceived||0})">
+      <div class="core-card-top">
+        <div class="core-so">${c.so}${isMulti ? ` <span class="badge badge-blue" style="margin-left:6px">Qty ${c.qtyOrdered}</span>` : ''}</div>
+        <div class="core-fee">${fc(c.fee)}</div>
+      </div>
+      <div class="core-customer">${c.customer}</div>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:2px">
+        <div class="core-model">${c.model||'<span style="color:var(--danger)">Model unknown</span>'}</div>
+        ${ageBadge}
+      </div>
+      ${qtyBar}
+      <div class="core-card-bottom" style="margin-top:${qtyBar?'8px':'0'}">
+        <span class="badge ${noP?'badge-danger':oldP?'badge-warn':'badge-green'}">${noP?'No pickup on record':oldP?'Pickup: '+fd(c.lastPickup):'Last: '+fd(c.lastPickup)}</span>
+        <span class="days-text">Rec #${c.rec}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCvisCards() {
+  const container = document.getElementById('cvis-cards');
+  if (!container) { render(); return; }
+  let filtered = CVIS_INV.filter(c => {
+    if (cvisSearch && !c.model.toLowerCase().includes(cvisSearch.toLowerCase())) return false;
+    if (cvisFilter === 'highvol' && c.vol12 < 50) return false;
+    if (cvisFilter === 'pre' && c.preEngage === 0) return false;
+    if (cvisFilter === 'inertia' && c.inertia === 0) return false;
+    return true;
+  });
+  container.innerHTML = filtered.map(c => {
+    const pct = maxVol>0?Math.round((c.vol12/maxVol)*100):0;
+    const velCls = c.vol12>=50?'':'med';
+    const velBadge = c.vol12>=50?'badge-green':c.vol12>=10?'badge-warn':'badge-gray';
+    const velText = c.vol12>=50?'High vel':c.vol12>=10?'Med vel':'Low vel';
+    return `<div class="inv-row">
+      <div style="flex:1;min-width:0">
+        <div class="inv-model">${c.model}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+          <span class="badge ${velBadge}">${velText}</span>
+          ${c.vol12>0?`<div class="vel-bar-wrap"><div class="vel-bar-fill ${velCls}" style="width:${pct}%"></div></div><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${c.vol12}/yr</span>`:''}
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="inv-qty">${c.total}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${c.preEngage>0?c.preEngage+' PE':''} ${c.inertia>0?c.inertia+' IN':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Patch chip filter actions to also preserve search input
+function setOutFilter(f) {
+  outFilter = f;
+  renderOutstandingCards();
+  const customers    = [...new Set(OUTSTANDING.map(c=>c.customer))].sort();
+  const noPickup     = OUTSTANDING.filter(c=>!c.lastPickup).length;
+  const sixMonthsOld = OUTSTANDING.filter(c => monthsOld(c.saleDate) >= 6).length;
+
+  // Update quick-filter chip row (always visible)
+  const chipRow = document.getElementById('out-chip-row');
+  if (chipRow) {
+    chipRow.innerHTML = `
+      <button class="chip ${outFilter==='all'?'active':''}" onclick="setOutFilter('all')">All (${OUTSTANDING.length})</button>
+      <button class="chip ${outFilter==='nopickup'?'active':''}" onclick="setOutFilter('nopickup')">No pickup (${noPickup})</button>
+      <button class="chip ${outFilter==='sixmonths'?'active':''}" onclick="setOutFilter('sixmonths')" style="${outFilter==='sixmonths'?'':'color:var(--danger);border-color:rgba(239,68,68,0.4);'}">⚠ Over 6 months (${sixMonthsOld})</button>`;
+  }
+
+  // Update mobile customer chips
+  const custChips = document.getElementById('out-chip-customers');
+  if (custChips) {
+    custChips.innerHTML = customers.map(c =>
+      `<button class="chip ${outFilter===c?'active':''}" onclick="setOutFilter('${c.replace(/'/g,"\'")}')"> ${c.split(' - ')[0]}</button>`
+    ).join('');
+  }
+
+  // Update desktop customer dropdown (sync selected value)
+  const sel = document.querySelector('.customer-select-wrap select');
+  if (sel) {
+    sel.innerHTML = `<option value="all">All customers</option>` +
+      customers.map(c => `<option value="${c}" ${outFilter===c?'selected':''}>${c}</option>`).join('');
+  }
+}
+
+function setCvisFilter(f) {
+  cvisFilter = f;
+  renderCvisCards();
+  const chipRow = document.getElementById('cvis-chip-row');
+  if (chipRow) {
+    chipRow.innerHTML = `
+      <button class="chip ${cvisFilter==='all'?'active':''}" onclick="setCvisFilter('all')">All</button>
+      <button class="chip ${cvisFilter==='highvol'?'active':''}" onclick="setCvisFilter('highvol')">High velocity</button>
+      <button class="chip ${cvisFilter==='pre'?'active':''}" onclick="setCvisFilter('pre')">Pre-engage</button>
+      <button class="chip ${cvisFilter==='inertia'?'active':''}" onclick="setCvisFilter('inertia')">Inertia</button>`;
+  }
+}
+
+// After render, restore search input value so it isn't wiped
+const _origRender = render;
+render = function() {
+  _origRender();
+  // Restore search values and refocus if needed
+  const outIn = document.getElementById('out-search-input');
+  if (outIn && outSearch) outIn.value = outSearch;
+  const cvisIn = document.getElementById('cvis-search-input');
+  if (cvisIn && cvisSearch) cvisIn.value = cvisSearch;
+};
+
+render();
+</script>
+</body>
+</html>

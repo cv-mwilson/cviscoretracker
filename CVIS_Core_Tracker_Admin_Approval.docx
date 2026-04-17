@@ -1,0 +1,109 @@
+**CVIS Core Tracker**
+
+NetSuite Integration — Administrator Approval Request
+
+*Cardinal Valley Industrial Supply, Inc.  |  April 2026*
+
+**Executive Summary**
+
+Cardinal Valley Industrial Supply manages a remanufactured air starter business that involves tracking core returns from customers. Currently this process is entirely manual — sales orders, invoices, and quotes must be updated by hand each time a core is received, and there is no centralized view of outstanding cores, customer core banks, or CVIS-owned inventory.
+
+This document requests administrator approval to deploy two NetSuite components that will fully automate the core tracking workflow:
+
+- A SuiteScript 2.0 RESTlet — a lightweight script that runs inside NetSuite and handles data reads and writes
+
+- A NetSuite Connected App (OAuth 2.0) — a secure credential set that allows our Core Tracker web application to communicate with NetSuite
+
+| **What this eliminates** After deployment, the team will no longer need to manually open each sales order, invoice, and quote to mark "core received" — this happens automatically the moment a core is logged on the FastFields tablet app. The credit amount (full if within 30 days, 50% if past 30 days) is also calculated and applied automatically. |
+| --- |
+
+**What We Are Asking You To Do**
+
+Two actions are required from a NetSuite Administrator. Both are standard administrative tasks and neither modifies any existing data, records, or user permissions.
+
+**Action 1 — Create a Connected App**
+
+Path: Setup → Integration → Manage Integrations → New
+
+| **Field** | **Value** |
+| --- | --- |
+| **Name** | CVIS Core Tracker |
+| **State** | Enabled |
+| **Authentication** | Client Credentials (Machine to Machine) |
+| **Enable REST Web Services** | Yes (check the box) |
+| **Enable SuiteScript** | Yes (check the box) |
+
+| **Important — Copy credentials immediately** After saving, NetSuite displays a Client ID and Client Secret ONE TIME only. Please copy both values and send them to Marcus Coffey before closing the page. They cannot be retrieved again. |
+| --- |
+
+**Action 2 — Deploy the SuiteScript RESTlet**
+
+The script file (cvis_core_restlet.js) is included with this document package. Estimated time: 15 minutes.
+
+- Navigate to Documents → Files → SuiteScripts and upload cvis_core_restlet.js
+
+- Go to Setup → Script → Scripts → New Script
+
+- Browse to the uploaded file — NetSuite will auto-detect it as a RESTlet type
+
+- Set Script ID to: customscript_cvis_core_tracker
+
+- Save the script record, then click Deploy Script
+
+- Set Status to Released, set Audience to All Roles (internal use only)
+
+- Copy the External URL shown on the deployment page and send to Marcus
+
+**Action 3 — Verify or Create Custom Fields on Sales Order Lines**
+
+The following fields may already exist on your Sales Order line items. If they do, no action is needed. If not, they can be added in Customization → Lists, Records, & Fields → Transaction Line Fields → New.
+
+| **Field ID** | **Type** | **Purpose** |
+| --- | --- | --- |
+| custcol_core_received | Checkbox | Has the core been returned? |
+| custcol_core_received_date | Date | Date core was received at CVIS |
+| custcol_core_destination | List | MASCO / CVIS / Hold / Warranty |
+| custcol_starter_model | Free Text | Starter model number |
+| custcol_serial_number | Free Text | Core serial number |
+
+**How the Integration Works**
+
+Once deployed, the following happens automatically every time a core is received at the shop:
+
+| **1** | Team member opens Core Receiving Log on the FastFields tablet app and fills out the form (model, serial number, customer, SO reference, destination: MASCO / CVIS / Hold / Warranty). |
+| --- | --- |
+| **2** | Form is submitted. FastFields instantly fires a webhook — an automatic background notification — to the CVIS Core Tracker server. |
+| **3** | The Core Tracker server reads the reference number (SO/invoice/quote), looks it up in NetSuite via the RESTlet, and calculates the credit: full credit within 30 days, 50% credit after 30 days. |
+| **4** | The RESTlet stamps "Core Received" + date + destination on the Sales Order line item, and creates a Credit Memo against the linked Invoice for the correct credit amount. |
+| **5** | The Core Tracker dashboard updates instantly. The core moves from "Outstanding" to received. No manual steps required by anyone. |
+
+**Security ****&**** Access Controls**
+
+| **Topic** | **Details** |
+| --- | --- |
+| **Authentication** | OAuth 2.0 Client Credentials — same protocol used by Salesforce and Workday integrations |
+| **Data access scope** | Read-only on Sales Orders. Write access limited to the five custom fields above plus Credit Memo creation only. |
+| **No user credentials stored** | The integration uses a machine token. No employee logins or passwords are used or stored. |
+| **External hosting** | Webhook server hosted on Railway (SOC 2 Type II). No customer PII is stored externally. |
+| **Audit trail** | Every RESTlet action is logged in NetSuite at Setup → Script → Script Execution Log. |
+| **Instant revocation** | The Connected App can be disabled immediately in Setup → Integration → Manage Integrations. |
+
+**Estimated Deployment Time**
+
+| **Task** | **Who** | **Est. Time** |
+| --- | --- | --- |
+| Create Connected App | NetSuite Admin | 5 minutes |
+| Upload & deploy RESTlet | NetSuite Admin | 15 minutes |
+| Verify/add custom fields | NetSuite Admin | 10 minutes |
+| Configure FastFields webhook | Marcus Coffey | 5 minutes |
+| Deploy webhook server | Marcus Coffey | 10 minutes |
+| End-to-end test | Marcus + Admin | 15 minutes |
+| Total |  | Approx. 60 minutes |
+
+**Approval**
+
+| **Request** Please create the Connected App and deploy the RESTlet as described above. All code is included in the attached file package (cvis_core_restlet.js). Questions can be directed to Marcus Coffey. |
+| --- |
+
+| Requested by: Marcus Coffey *Cardinal Valley Industrial Supply* | Approved by:  *NetSuite Administrator  │  Date: ___________* |
+| --- | --- |
