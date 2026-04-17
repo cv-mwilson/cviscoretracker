@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CVIS Core Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0f1923;
+  --surface: #162130;
+  --card:    #1c2d3f;
+  --border:  rgba(255,255,255,0.08);
+  --accent:  #00d4aa;
+  --accent2: #3b82f6;
+  --warn:    #f59e0b;
+  --danger:  #ef4444;
+  --text:    #f0f4f8;
+  --muted:   #7a9bb5;
+  --mono:    'DM Mono', monospace;
+  --head:    'Syne', sans-serif;
+  --body:    'DM Sans', sans-serif;
+  --r:       12px;
+  --rs:      8px;
+  --sidebar: 220px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  height: 52px;
+  background: rgba(22,33,48,0.95);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 20px;
+  flex-shrink: 0;
+  backdrop-filter: blur(16px);
+}
+.logo {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.logo span { color: var(--accent); }
+.logo-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.topbar-spacer { flex: 1; }
+.ns-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.ns-status:hover { border-color: var(--accent); color: var(--text); }
+.ns-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
+.ns-dot.on { background: var(--accent); }
+.log-btn {
+  background: var(--accent);
+  color: #0f1923;
+  border: none;
+  border-radius: var(--rs);
+  font-family: var(--head);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.log-btn:hover { opacity: 0.88; }
+.log-btn svg { width: 14px; height: 14px; stroke: #0f1923; fill: none; stroke-width: 2.5; }
+
+/* ── LAYOUT ── */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 10px;
+  flex-shrink: 0;
+}
+.nav-section {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 0 10px;
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+.nav-section:first-child { margin-top: 0; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--rs);
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.12s;
+  border: 1px solid transparent;
+  position: relative;
+}
+.nav-item:hover { background: var(--card); color: var(--text); }
+.nav-item.active {
+  background: rgba(0,212,170,0.1);
+  color: var(--accent);
+  border-color: rgba(0,212,170,0.2);
+}
+.nav-item svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; flex-shrink: 0; }
+.nav-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  background: rgba(239,68,68,0.15);
+  color: var(--danger);
+  border-radius: 99px;
+  padding: 1px 7px;
+}
+.nav-count.ok {
+  background: rgba(0,212,170,0.1);
+  color: var(--accent);
+}
+.sidebar-footer {
+  margin-top: auto;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ── MAIN CONTENT ── */
+.main-area {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.content-header {
+  padding: 18px 24px 0;
+  flex-shrink: 0;
+}
+.content-title {
+  font-family: var(--head);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.content-title-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 400;
+}
+.metrics-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.metric-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--accent-line, var(--accent));
+  border-radius: var(--r);
+  padding: 12px 16px;
+  min-width: 130px;
+}
+.metric-card.warn { --accent-line: var(--warn); }
+.metric-card.danger { --accent-line: var(--danger); }
+.metric-card.blue { --accent-line: var(--accent2); }
+.metric-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.metric-val {
+  font-family: var(--head);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.metric-val.accent { color: var(--accent); }
+.metric-val.warn   { color: var(--warn); }
+.metric-val.danger { color: var(--danger); }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 0 24px 14px;
+  flex-shrink: 0;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 300px;
+}
+.search-icon {
+  position: absolute;
+  left: 10px; top: 50%;
+  transform: translateY(-50%);
+  width: 14px; height: 14px;
+  stroke: var(--muted); fill: none; stroke-width: 2;
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 13px;
+  padding: 8px 12px 8px 32px;
+  outline: none;
+}
+.search-input::placeholder { color: var(--muted); }
+.search-input:focus { border-color: var(--accent); }
+.chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--card);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.chip:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.chip.active { color: var(--accent); border-color: var(--accent); background: rgba(0,212,170,0.08); }
+.select-filter {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 7px 28px 7px 12px;
+  outline: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a9bb5' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+.select-filter:focus { border-color: var(--accent); }
+
+/* ── TABLE ── */
+.table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--card) transparent;
+}
+.table-wrap::-webkit-scrollbar { width: 6px; }
+.table-wrap::-webkit-scrollbar-track { background: transparent; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--card); border-radius: 3px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+thead { position: sticky; top: 0; z-index: 10; }
+th {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+  text-align: left;
+  padding: 9px 14px;
+  white-space: nowrap;
+}
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+}
+tr:hover td { background: rgba(255,255,255,0.02); }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: rgba(0,212,170,0.04); }
+
+.mono { font-family: var(--mono); }
+.code-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px 7px;
+  color: var(--text);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-weight: 500;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.badge-green  { background: rgba(0,212,170,0.12);   color: var(--accent);  border: 1px solid rgba(0,212,170,0.25); }
+.badge-warn   { background: rgba(245,158,11,0.12);  color: var(--warn);    border: 1px solid rgba(245,158,11,0.25); }
+.badge-danger { background: rgba(239,68,68,0.12);   color: var(--danger);  border: 1px solid rgba(239,68,68,0.25); }
+.badge-blue   { background: rgba(59,130,246,0.12);  color: #60a5fa;        border: 1px solid rgba(59,130,246,0.25); }
+.badge-gray   { background: rgba(122,155,181,0.1);  color: var(--muted);   border: 1px solid rgba(122,155,181,0.2); }
+.badge-purple { background: rgba(167,139,250,0.12); color: #a78bfa;        border: 1px solid rgba(167,139,250,0.25); }
+.badge-teal   { background: rgba(20,184,166,0.12);  color: #2dd4bf;        border: 1px solid rgba(20,184,166,0.25); }
+
+.action-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: var(--rs);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.action-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── BANK GRID ── */
+.bank-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  padding: 0 24px 24px;
+}
+.bank-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent2);
+  border-radius: var(--r);
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.bank-card:hover { border-color: rgba(59,130,246,0.5); transform: translateY(-1px); }
+.bank-avatar {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--head);
+  font-size: 11px; font-weight: 700;
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+.bank-name { font-size: 13px; font-weight: 500; line-height: 1.3; flex: 1; min-width: 0; }
+.bank-corp { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.bank-count { font-family: var(--head); font-size: 22px; font-weight: 700; color: var(--accent); }
+.bank-models { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.count-row {
+  display: flex; justify-content: space-between;
+  font-size: 12px; padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.count-row:last-child { border-bottom: none; }
+
+/* ── INVENTORY ROWS ── */
+.inv-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.1s;
+}
+.inv-row:hover { background: rgba(255,255,255,0.02); }
+.inv-model { font-family: var(--mono); font-size: 13px; flex: 1; }
+.inv-qty { font-family: var(--head); font-size: 20px; font-weight: 700; color: var(--accent); min-width: 40px; text-align: right; }
+.vel-bar-wrap { width: 80px; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+.vel-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+.vel-bar-fill.med { background: var(--warn); }
+.vel-bar-fill.low { background: var(--muted); }
+
+/* ── BACK HEADER ── */
+.drill-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.back-btn {
+  width: 32px; height: 32px;
+  border-radius: var(--rs);
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+  transition: border-color 0.12s;
+}
+.back-btn:hover { border-color: var(--accent); }
+.back-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  width: 460px;
+  max-width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn { from { opacity:0; transform: scale(0.96) translateY(8px); } to { opacity:1; transform: none; } }
+.modal-title { font-family: var(--head); font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+.form-group { margin-bottom: 14px; }
+.form-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 6px; }
+.form-input, .form-select {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  padding: 10px 13px;
+  outline: none;
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent); }
+.form-select {
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a9bb5' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  padding-right: 34px;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.credit-callout {
+  background: rgba(0,212,170,0.08);
+  border: 1px solid rgba(0,212,170,0.2);
+  border-radius: var(--rs);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.credit-label { font-size: 12px; color: var(--muted); }
+.credit-amount { font-family: var(--mono); font-size: 20px; color: var(--accent); font-weight: 500; }
+.btn-row { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+.btn-primary {
+  background: var(--accent); color: #0f1923; border: none;
+  border-radius: var(--rs); font-family: var(--head); font-size: 13px; font-weight: 700;
+  padding: 10px 20px; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.88; }
+.btn-secondary {
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border); border-radius: var(--rs);
+  font-family: var(--body); font-size: 13px;
+  padding: 10px 16px; cursor: pointer; transition: all 0.12s;
+}
+.btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.ns-warning {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--rs);
+  padding: 10px 14px;
+  font-size: 12px; color: var(--muted);
+  margin-bottom: 4px;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--card);
+  border: 1px solid var(--accent);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  font-size: 13px; color: var(--text);
+  z-index: 300;
+  display: flex; align-items: center; gap: 10px;
+  transition: opacity 0.3s, transform 0.3s;
+  max-width: 360px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.toast.hidden { opacity: 0; transform: translateY(8px); pointer-events: none; }
+.toast-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+/* ── EMPTY ── */
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-icon { font-size: 36px; opacity: 0.3; margin-bottom: 12px; }
+.empty-text { font-size: 14px; }
+
+/* ── SCROLLBAR STYLE ── */
+* { scrollbar-width: thin; scrollbar-color: var(--card) transparent; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--card); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="logo">CVIS <span>Core Tracker</span></div>
+  </div>
+  <div class="logo-sub">Cardinal Valley Industrial Supply</div>
+  <div class="topbar-spacer"></div>
+  <div class="ns-status" onclick="showToast('Connect NetSuite in Settings — see the Admin Approval doc.')">
+    <div class="ns-dot" id="ns-dot"></div>
+    <span id="ns-label">NetSuite: Not connected</span>
+  </div>
+  <button class="log-btn" onclick="openReceiveModal()">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    Log receipt
+  </button>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="nav-section">Views</div>
+    <div class="nav-item active" onclick="switchTab('outstanding',this)" id="nav-outstanding">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path d="M9 12h6M9 16h4"/></svg>
+      Outstanding
+      <span class="nav-count">64</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('banked',this)" id="nav-banked">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Customer Banks
+      <span class="nav-count ok">95</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('cvis',this)" id="nav-cvis">
+      <svg viewBox="0 0 24 24"><path d="M5 8h14M5 8a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v0a2 2 0 01-2 2M5 8l1 12a2 2 0 002 2h8a2 2 0 002-2L19 8"/></svg>
+      CVIS Inventory
+    </div>
+
+    <div class="nav-section">Settings</div>
+    <div class="nav-item" onclick="showToast('Connect NetSuite in Settings — see the Admin Approval doc.')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41"/></svg>
+      NetSuite Setup
+    </div>
+    <div class="nav-item" onclick="showToast('FastFields webhook config — see DEPLOY_README.md.')">
+      <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      FastFields
+    </div>
+
+    <div class="sidebar-footer">
+      Account ID: 5471843<br>
+      All data from NetSuite<br>
+      v1.0 — April 2026
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area" id="main-area"></div>
+</div>
+
+<div class="toast hidden" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+<div id="modal-root"></div>
+
+<script>
+const PRICES={T100V:1575,T30:875,T100F:1275,'150BMG':600,'150BMGE':600,'150BMGE21RH6-R':600,'150BMGE21RH6-6':600,'150T':600,SS815:1025,'45MA':1025,ST700:1025,T100B:1275,ST1000:1575,SS100:915,SS825:1025,'150BMP':600,'150BMPE':600,'150BMPD':600,T100D:1275,T50:875,'6-LS-8 RH46-1-R-CV':600,'6-LS-8T RH46-1':600,ST150:600,ST750GBD:1025,'55-35000':600,'55-35038':600,'55-42008':600,'55-33000':600,'ATS83-20311IKM':600,MISC:600};
+function cp(m){const k=(m||'').replace(/ - CORE CHARGE/i,'').replace(/ CORE CHARGE/i,'').trim();if(PRICES[k])return PRICES[k];for(const pk of Object.keys(PRICES))if(k.toUpperCase().startsWith(pk.toUpperCase()))return PRICES[pk];return 600;}
+function fc(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function ini(name){return name.split(/[\s\-]+/).filter(w=>/^[A-Z]/i.test(w)).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+function fd(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+
+const OUTSTANDING=[
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10750,so:'SO24881',model:'150BMP'},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10751,so:'SO24881',model:'150BMP'},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10752,so:'SO24882',model:'T30'},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10753,so:'SO24882',model:'T30'},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10756,so:'SO24885',model:'150BMP'},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10768,so:'SO24934',model:'T100D'},
+  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:11293,so:'SO25699',model:'T50'},
+  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:10785,so:'SO25111',model:'T30'},
+  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:11290,so:'SO25110',model:'T100V'},
+  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:11330,so:'SO25724',model:'T100V'},
+  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:11436,so:'SO25830',model:'T100V'},
+  {customer:'Dann Ocean Towing',lastPickup:null,rec:11074,so:'SO25537',model:'T100B'},
+  {customer:'Davis Marine Service',lastPickup:null,rec:10898,so:'SO25195',model:'150BMG'},
+  {customer:'Davis Marine Service',lastPickup:null,rec:11180,so:'SO25566',model:'150BMP'},
+  {customer:'Davis Marine Service',lastPickup:null,rec:11439,so:'SO25955',model:'T100V'},
+  {customer:'Davis Marine Service',lastPickup:null,rec:11440,so:'SO25955',model:'T100V'},
+  {customer:'Davis Marine Service',lastPickup:null,rec:11441,so:'SO25955',model:'T100V'},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10690,so:'SO24620',model:'150BMGE21RH6-R'},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10691,so:'SO24620',model:'150BMGE21RH6-R'},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10692,so:'SO24626',model:'150BMGE21RH6-R'},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10774,so:'SO25018',model:'T100B'},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:11043,so:'SO25246',model:'SS815'},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:11044,so:'SO25246',model:'SS815'},
+  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:11064,so:'SO25324',model:'MISC'},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11066,so:'SO25358',model:'T100V'},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11067,so:'SO25358',model:'T100V'},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11068,so:'SO25358',model:'T100V'},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11071,so:'SO25359',model:'T100B'},
+  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11431,so:'SO25764',model:'SS825'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10660,so:'SO24180',model:'SS815'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10661,so:'SO24180',model:'SS815'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10681,so:'SO24541',model:'T100B'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10682,so:'SO24541',model:'T100B'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10689,so:'SO24595',model:'T30'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10693,so:'SO24633',model:'150BMG'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10743,so:'SO24814',model:'SS815'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10744,so:'SO24814',model:'SS815'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10745,so:'SO24814',model:'T100B'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10746,so:'SO24814',model:'T100B'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10446,so:'SO22178',model:'T100B'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10464,so:'SO22368',model:'150BMG'},
+  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10479,so:'SO22416',model:'150T'},
+  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:10699,so:'SO24641',model:'150BMP'},
+  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:11442,so:'SO25990',model:''},
+  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:11443,so:'SO25990',model:''},
+  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:11444,so:'SO25990',model:''},
+  {customer:'USA Compression: Montrose',lastPickup:'11/4/2025',rec:10722,so:'SO24713',model:'T100B'},
+  {customer:'USA Compression: Montrose',lastPickup:'11/4/2025',rec:10729,so:'SO24736',model:'T100B'},
+  {customer:'Williams Gas - Fort Beeler',lastPickup:'11/4/2025',rec:11446,so:'SO25999',model:'SS825'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:10786,so:'SO25119',model:'150T'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11174,so:'SO25541',model:'SS815'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11175,so:'SO25545',model:'45MA'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11176,so:'SO25541',model:'SS815'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11182,so:'SO25394',model:'ST700'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11183,so:'SO25394',model:'ST700'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11291,so:'SO25686',model:'T100B'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11328,so:'SO25723',model:'ST1000'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11329,so:'SO25723',model:'ST1000'},
+  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11454,so:'SO26085',model:'SS100'},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11184,so:'SO25600',model:'T100V'},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11292,so:'SO25693',model:'T30'},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11437,so:'SO25852',model:'T100F'},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11447,so:'SO26002',model:'T100F'},
+  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11453,so:'SO26041',model:'150BMG'},
+];
+OUTSTANDING.forEach(c=>{c.fee=cp(c.model)});
+
+const BANKED=[
+  {customer:'Centerline - New York',corp:'Centerline (Corporate)',model:'6-LS-8 RH46-1-R-CV',serial:'69317',dateCreated:'10/30/2025'},
+  {customer:'Centerline - New York',corp:'Centerline (Corporate)',model:'T100V',serial:'N/A',dateCreated:'10/30/2025'},
+  {customer:'Cleveland Brothers CAT - Hunker/New Stanton',corp:'Cleveland Brothers CAT (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Cleveland Brothers CAT - Hunker/New Stanton',corp:'Cleveland Brothers CAT (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'Electric Starter Core',serial:'N/A',dateCreated:'3/27/2026'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'N/A',dateCreated:'3/27/2026'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'',dateCreated:'4/2/2026'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMG',serial:'',dateCreated:'4/2/2026'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'1214 56116',dateCreated:'2/27/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'1005 283',dateCreated:'2/27/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'rkl 39862',dateCreated:'2/27/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'1001 143',dateCreated:'2/27/2025'},
+  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'NA',dateCreated:'2/27/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'140803-3',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'ST1000',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'190425-3',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'23249',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'26883',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'M6364',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'170516-3',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'1403-214',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'181115-2',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'10007',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'SS100',serial:'SP160422018',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'321172',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMG',serial:'20072120',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'27903',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'NA',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NH22010',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'28280',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'160722-4',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'1409-1125',dateCreated:'1/8/2025'},
+  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMGE21RH6-6',serial:'SP060315078',dateCreated:'1/8/2025'},
+  {customer:'USA Compression: Beallsville',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Beallsville',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Beallsville',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ST150',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ST750GBD03L32',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35000',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35000',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35000',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'6-LS-8T RH46-1',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'6-LS-8T RH46-1',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ATS83-20311IKM',serial:'',dateCreated:'11/7/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'73024F',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'2207 0728',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'MISC',serial:'0918-7075',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35038',serial:'67778',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-42008',serial:'66935',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ST150',serial:'SP230410010',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'SS100',serial:'',dateCreated:'11/24/2025'},
+  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'SS100',serial:'',dateCreated:'11/24/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'35064',dateCreated:'1/30/2026'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'35170',dateCreated:'1/30/2026'},
+  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'35439',dateCreated:'1/30/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'T100V',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'T100V',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'SS825',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'SS825',serial:'',dateCreated:'2/9/2026'},
+  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'SS825',serial:'',dateCreated:'2/9/2026'},
+  {customer:'McAllister - Puerto Rico',corp:'McAllister (Corporate)',model:'T100B',serial:'',dateCreated:'4/16/2026'},
+];
+
+const CVIS_INV=[
+  {model:'T30',total:47,preEngage:11,inertia:35,vol12:70},
+  {model:'T6',total:11,preEngage:11,inertia:0,vol12:4},
+  {model:'T7',total:5,preEngage:5,inertia:0,vol12:2},
+  {model:'T100V',total:37,preEngage:37,inertia:0,vol12:368},
+  {model:'150BMPD',total:72,preEngage:72,inertia:0,vol12:102},
+  {model:'150BMGE',total:34,preEngage:0,inertia:34,vol12:143},
+  {model:'SS800',total:51,preEngage:48,inertia:3,vol12:58},
+  {model:'52-S',total:25,preEngage:0,inertia:25,vol12:2},
+  {model:'52-D',total:1,preEngage:0,inertia:1,vol12:0},
+  {model:'150BMPE',total:10,preEngage:10,inertia:0,vol12:79},
+  {model:'T100B',total:10,preEngage:0,inertia:10,vol12:50},
+  {model:'T50',total:1,preEngage:1,inertia:0,vol12:15},
+  {model:'LS-8',total:16,preEngage:16,inertia:0,vol12:3},
+  {model:'55-35',total:11,preEngage:0,inertia:11,vol12:0},
+  {model:'55-40',total:2,preEngage:0,inertia:2,vol12:0},
+  {model:'55-42',total:5,preEngage:5,inertia:0,vol12:0},
+  {model:'59T',total:7,preEngage:0,inertia:0,vol12:0},
+  {model:'SS100',total:7,preEngage:7,inertia:0,vol12:13},
+  {model:'SS350',total:2,preEngage:2,inertia:0,vol12:11},
+  {model:'LS-16',total:6,preEngage:0,inertia:6,vol12:0},
+  {model:'SM-250',total:15,preEngage:0,inertia:15,vol12:0},
+  {model:'SM-19000',total:1,preEngage:0,inertia:1,vol12:0},
+  {model:'5BM',total:5,preEngage:2,inertia:1,vol12:0},
+  {model:'ST650',total:3,preEngage:3,inertia:0,vol12:0},
+  {model:'Small Switzer',total:3,preEngage:0,inertia:3,vol12:0},
+  {model:'Large Switzer',total:3,preEngage:0,inertia:3,vol12:0},
+  {model:'ATS577',total:1,preEngage:0,inertia:1,vol12:0},
+  {model:'LS-23',total:3,preEngage:3,inertia:0,vol12:0},
+  {model:'45MA',total:3,preEngage:3,inertia:0,vol12:0},
+  {model:'150T',total:1,preEngage:1,inertia:0,vol12:0},
+  {model:'ST150',total:2,preEngage:2,inertia:0,vol12:0},
+  {model:'ST400',total:1,preEngage:1,inertia:0,vol12:0},
+];
+const maxVol=Math.max(...CVIS_INV.map(c=>c.vol12));
+
+let currentTab='outstanding', drillCustomer=null;
+let outSearch='', outFilter='all';
+let cvisSearch='', cvisFilter='all';
+
+function switchTab(tab, el) {
+  currentTab=tab; drillCustomer=null;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function render() {
+  const a = document.getElementById('main-area');
+  if (currentTab==='outstanding') a.innerHTML = renderOutstanding();
+  else if (currentTab==='banked') { if(drillCustomer) a.innerHTML=renderDrill(drillCustomer); else a.innerHTML=renderBanked(); }
+  else a.innerHTML = renderCVIS();
+}
+
+function renderOutstanding() {
+  const tf=OUTSTANDING.reduce((a,c)=>a+c.fee,0);
+  const noP=OUTSTANDING.filter(c=>!c.lastPickup).length;
+  const custs=[...new Set(OUTSTANDING.map(c=>c.customer))].sort();
+  let rows=OUTSTANDING.filter(c=>{
+    const q=outSearch.toLowerCase();
+    if(q&&!(c.customer+c.model+c.so).toLowerCase().includes(q))return false;
+    if(outFilter==='nopickup'&&c.lastPickup)return false;
+    if(outFilter!=='all'&&outFilter!=='nopickup'&&c.customer!==outFilter)return false;
+    return true;
+  });
+  return `<div class="content-header">
+    <div class="content-title">Outstanding Cores <span class="content-title-badge">Core bin customers</span></div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-lbl">Total outstanding</div><div class="metric-val">${OUTSTANDING.length}</div></div>
+      <div class="metric-card blue"><div class="metric-lbl">Fees held</div><div class="metric-val accent" style="font-size:20px">${fc(tf)}</div></div>
+      <div class="metric-card warn"><div class="metric-lbl">No pickup on record</div><div class="metric-val warn">${noP}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Customers</div><div class="metric-val">${custs.length}</div></div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" type="search" placeholder="Search SO, customer, model…" value="${outSearch}" oninput="outSearch=this.value;render()">
+    </div>
+    <button class="chip ${outFilter==='all'?'active':''}" onclick="outFilter='all';render()">All</button>
+    <button class="chip ${outFilter==='nopickup'?'active':''}" onclick="outFilter='nopickup';render()">No pickup (${noP})</button>
+    <select class="select-filter" onchange="outFilter=this.value;render()">
+      <option value="all">All customers</option>
+      ${custs.map(c=>`<option value="${c}" ${outFilter===c?'selected':''}>${c}</option>`).join('')}
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Record #</th><th>Sales order</th><th>Customer</th><th>Model</th>
+        <th>Core fee</th><th>Last bin pickup</th><th>Status</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${rows.length===0?`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No results</div></div></td></tr>`:
+        rows.map(c=>{
+          const noPickup=!c.lastPickup;
+          const oldPickup=c.lastPickup&&new Date(c.lastPickup)<new Date('2025-01-01');
+          const pickupBadge=noPickup?'badge-danger':oldPickup?'badge-warn':'badge-green';
+          const pickupText=noPickup?'No pickup on record':fd(c.lastPickup);
+          return `<tr class="clickable" onclick="openReceiveModal('${c.rec}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee})">
+            <td class="mono" style="color:var(--muted);font-size:12px">${c.rec}</td>
+            <td><span class="badge badge-blue">${c.so}</span></td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
+            <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
+            <td class="mono" style="font-weight:500">${fc(c.fee)}</td>
+            <td><span class="badge ${pickupBadge}">${pickupText}</span></td>
+            <td><span class="badge badge-purple">Core Bin</span></td>
+            <td><button class="action-btn" onclick="event.stopPropagation();openReceiveModal('${c.rec}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee})">Log receipt</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderBanked() {
+  const byC={};
+  BANKED.forEach(b=>{if(!byC[b.customer])byC[b.customer]={customer:b.customer,corp:b.corp,cores:[],models:{}};byC[b.customer].cores.push(b);byC[b.customer].models[b.model]=(byC[b.customer].models[b.model]||0)+1;});
+  const custs=Object.values(byC).sort((a,b)=>b.cores.length-a.cores.length);
+  const withSerial=BANKED.filter(b=>b.serial&&b.serial!=='NA'&&b.serial!=='N/A'&&b.serial.trim()).length;
+  return `<div class="content-header">
+    <div class="content-title">Customer Banked Cores <span class="content-title-badge">Right container</span></div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-lbl">Customers</div><div class="metric-val">${custs.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Total banked</div><div class="metric-val accent">${BANKED.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">With serial #</div><div class="metric-val">${withSerial}</div></div>
+      <div class="metric-card warn"><div class="metric-lbl">Missing serial</div><div class="metric-val warn">${BANKED.length-withSerial}</div></div>
+    </div>
+  </div>
+  <div class="table-wrap" style="overflow-y:auto;padding:0 24px 24px">
+    <div class="bank-grid" style="padding:0">
+      ${custs.map(b=>`
+        <div class="bank-card" onclick="drillCustomer='${b.customer.replace(/'/g,"\\'")}';render()">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div class="bank-avatar">${ini(b.customer)}</div>
+            <div style="flex:1;min-width:0">
+              <div class="bank-name">${b.customer}</div>
+              <div class="bank-corp">${b.corp}</div>
+            </div>
+            <div class="bank-count">${b.cores.length}</div>
+          </div>
+          ${Object.entries(b.models).slice(0,6).map(([m,n])=>`<div class="count-row"><span style="font-family:var(--mono);font-size:12px">${m}</span><span style="font-family:var(--mono);font-size:12px;color:var(--accent)">${n}</span></div>`).join('')}
+          ${Object.keys(b.models).length>6?`<div style="font-size:11px;color:var(--muted);padding-top:6px">+${Object.keys(b.models).length-6} more models</div>`:''}
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderDrill(customer) {
+  const rows=BANKED.filter(b=>b.customer===customer);
+  const models={};rows.forEach(r=>{models[r.model]=(models[r.model]||0)+1});
+  const withS=rows.filter(r=>r.serial&&r.serial!=='NA'&&r.serial!=='N/A'&&r.serial.trim()).length;
+  return `<div class="content-header">
+    <div class="drill-header">
+      <button class="back-btn" onclick="drillCustomer=null;render()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="content-title" style="margin-bottom:0">${customer}</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">${rows[0].corp} — Customer-owned, stored in right container</div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-lbl">Banked</div><div class="metric-val accent">${rows.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Models</div><div class="metric-val">${Object.keys(models).length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">With serial</div><div class="metric-val">${withS}</div></div>
+      <div class="metric-card warn"><div class="metric-lbl">No serial</div><div class="metric-val warn">${rows.length-withS}</div></div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>Serial number</th><th>Date logged</th><th>Status</th></tr></thead>
+      <tbody>${rows.map(r=>{
+        const hasS=r.serial&&r.serial!=='NA'&&r.serial!=='N/A'&&r.serial.trim();
+        return `<tr>
+          <td><span class="code-pill">${r.model}</span></td>
+          <td class="mono" style="font-size:12px;color:${hasS?'var(--text)':'var(--danger)'}">${hasS?r.serial:'—'}</td>
+          <td style="color:var(--muted);font-size:12px">${fd(r.dateCreated)}</td>
+          <td><span class="badge badge-teal">Banked</span></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderCVIS() {
+  const total=CVIS_INV.reduce((a,c)=>a+c.total,0);
+  const highV=CVIS_INV.filter(c=>c.vol12>=50).length;
+  let rows=CVIS_INV.filter(c=>{
+    if(cvisSearch&&!c.model.toLowerCase().includes(cvisSearch.toLowerCase()))return false;
+    if(cvisFilter==='highvol'&&c.vol12<50)return false;
+    if(cvisFilter==='pre'&&c.preEngage===0)return false;
+    if(cvisFilter==='inertia'&&c.inertia===0)return false;
+    return true;
+  });
+  return `<div class="content-header">
+    <div class="content-title">CVIS Owned Inventory <span class="content-title-badge">Left container</span></div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-lbl">Total cores</div><div class="metric-val accent">${total}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Unique models</div><div class="metric-val">${CVIS_INV.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">High velocity</div><div class="metric-val" style="color:var(--accent)">${highV}</div></div>
+      <div class="metric-card blue"><div class="metric-lbl">Container</div><div class="metric-val" style="font-size:16px;padding-top:4px">Left</div></div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" type="search" placeholder="Search model…" value="${cvisSearch}" oninput="cvisSearch=this.value;render()">
+    </div>
+    <button class="chip ${cvisFilter==='all'?'active':''}" onclick="cvisFilter='all';render()">All</button>
+    <button class="chip ${cvisFilter==='highvol'?'active':''}" onclick="cvisFilter='highvol';render()">High velocity</button>
+    <button class="chip ${cvisFilter==='pre'?'active':''}" onclick="cvisFilter='pre';render()">Pre-engage</button>
+    <button class="chip ${cvisFilter==='inertia'?'active':''}" onclick="cvisFilter='inertia';render()">Inertia</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>Total qty</th><th>Pre-engage</th><th>Inertia</th><th>Vol (12mo)</th><th>Velocity</th></tr></thead>
+      <tbody>${rows.map(c=>{
+        const pct=maxVol>0?Math.round((c.vol12/maxVol)*100):0;
+        const velCls=c.vol12>=50?'':'med';
+        const vB=c.vol12>=50?'badge-green':c.vol12>=10?'badge-warn':'badge-gray';
+        const vT=c.vol12>=50?'High':c.vol12>=10?'Med':'Low';
+        return `<tr>
+          <td><span class="code-pill">${c.model}</span></td>
+          <td class="mono" style="font-weight:500;color:var(--accent)">${c.total}</td>
+          <td class="mono" style="color:var(--muted)">${c.preEngage||'—'}</td>
+          <td class="mono" style="color:var(--muted)">${c.inertia||'—'}</td>
+          <td class="mono" style="color:var(--muted)">${c.vol12||'—'}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="badge ${vB}">${vT}</span>
+              ${c.vol12>0?`<div class="vel-bar-wrap"><div class="vel-bar-fill ${velCls}" style="width:${pct}%"></div></div>`:''}
+            </div>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function openReceiveModal(rec, so, customer, model, fee) {
+  document.getElementById('modal-root').innerHTML=`
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-title">Log Core Receipt</div>
+        ${fee?`<div class="credit-callout">
+          <div><div class="credit-label">Core fee on this SO</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${customer||''}</div></div>
+          <div class="credit-amount">${fc(fee)}</div>
+        </div>`:''}
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Reference # (SO / INV / Quote)</label>
+            <input class="form-input" type="text" value="${so||''}" placeholder="SO25537">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Model number</label>
+            <input class="form-input" type="text" value="${model||''}" placeholder="T100V">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Serial number</label>
+            <input class="form-input" type="text" placeholder="Leave blank if unknown">
+          </div>
+          <div class="form-group">
+            <label class="form-label">From customer</label>
+            <input class="form-input" type="text" value="${customer||''}" placeholder="Customer name">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Destination</label>
+          <select class="form-select">
+            <option value="MASCO">MASCO core (standard)</option>
+            <option value="CVIS">CVIS core (left container)</option>
+            <option value="Hold">Hold shelf (repair / reclock)</option>
+            <option value="Warranty">Warranty bin (needs analysis)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes / condition</label>
+          <input class="form-input" type="text" placeholder="Any damage, missing parts, special notes…">
+        </div>
+        <div class="ns-warning">NetSuite not connected — connect via the Admin Approval process to enable auto-update of SO, invoice, and credit.</div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn-primary" onclick="submitReceipt()">Submit receipt</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function submitReceipt() {
+  closeModal();
+  showToast('Core receipt logged. Update NetSuite manually until integration is live.');
+}
+function closeModal() { document.getElementById('modal-root').innerHTML=''; }
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.remove('hidden');
+  setTimeout(()=>t.classList.add('hidden'),4000);
+}
+
+render();
+</script>
+</body>
+</html>
