@@ -5,21 +5,18 @@
  *
  * Workflows:
  *   "bin_pickup" — Core collected from customer's bin, physically arriving at CVIS shop.
- *                  Marks SO/Invoice/Quote received, flips Core Bank status to Applied,
- *                  sends credit notification email to AP/AR. FastFields triggered externally.
+ *                  Marks SO/Invoice/Quote received, flips Core Bank status to Applied.
+ *                  Credit memo handled separately by auto_core_credit.js.
  *
  *   "bank_draw"  — Core already at CVIS (right container), being pulled for a new sales order.
  *                  Marks new SO as Core Received, flips Core Bank status to Applied.
- *                  No FastFields, no credit email (bin customers not charged upfront).
  *
  * @NApiVersion 2.1
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(['N/search', 'N/record', 'N/email', 'N/runtime', 'N/log', 'N/format'],
-function(search, record, email, runtime, log, format) {
-
-  const APAR_EMAIL = 'account@cardinalvalley.com';
+define(['N/search', 'N/record', 'N/runtime', 'N/log', 'N/format'],
+function(search, record, runtime, log, format) {
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
   function daysBetween(dateStr) {
@@ -186,7 +183,7 @@ function(search, record, email, runtime, log, format) {
           soRec.commitLine({ sublistId: 'item' });
           lineFound = true;
 
-          // Pass qty info back for email and response
+          // Pass qty info back for response
           body._qtyOrdered   = currentQtyOrdered;
           body._qtyReceived  = newQtyReceived;
           body._qtyRemaining = Math.max(0, currentQtyOrdered - newQtyReceived);
@@ -302,60 +299,6 @@ function(search, record, email, runtime, log, format) {
         }
       }
 
-      // ── 5. Send credit notification email to AP/AR (bin_pickup only) ────────
-      if (workflow === 'bin_pickup') {
-        try {
-          var qtyOrdered   = body._qtyOrdered   || 1;
-          var qtyReceived  = body._qtyReceived  || 1;
-          var qtyRemaining = body._qtyRemaining || 0;
-          var allReceived  = body._allReceived  || false;
-
-          // Credit amount is per-core (fee / qty ordered)
-          var perCoreFee    = coreFee / qtyOrdered;
-          var perCoreCredit = creditAmount / qtyOrdered;
-
-          var emailBody = buildCreditEmail({
-            customer     : customer,
-            soNumber     : soNumber,
-            invoiceId    : invoiceId,
-            starterModel : starterModel,
-            serialNumber : serialNum,
-            dateReceived : fmtDate(new Date()),
-            saleDate     : fmtDate(saleDate),
-            daysOut      : daysOut,
-            coreFee      : fmtCurr(perCoreFee),
-            creditAmount : fmtCurr(perCoreCredit),
-            creditLabel  : creditLabel,
-            destination  : destination,
-            receivedBy   : receivedBy,
-            qtyOrdered   : qtyOrdered,
-            qtyReceived  : qtyReceived,
-            qtyRemaining : qtyRemaining,
-            allReceived  : allReceived
-          });
-
-          email.send({
-            author    : runtime.getCurrentUser().id,
-            recipients: [APAR_EMAIL],
-            subject   : (body._allReceived ? 'Core Return Credit Required' : 'Partial Core Return (' + body._qtyReceived + '/' + body._qtyOrdered + ')') + ' \u2014 ' + customer + ' | ' + soNumber,
-            body      : emailBody
-          });
-
-          results.emailSent = true;
-          results.emailTo   = APAR_EMAIL;
-          log.audit({ title: 'Credit notification email sent', details: APAR_EMAIL + ' | ' + soNumber });
-
-        } catch (emailErr) {
-          log.error({ title: 'Email send error', details: emailErr.message });
-          results.emailSent  = false;
-          results.emailError = emailErr.message;
-        }
-      } else {
-        // bank_draw — no email, no credit
-        results.emailSent = false;
-        results.emailNote = 'bank_draw workflow — no credit notification needed';
-      }
-
       return {
         success  : true,
         workflow : workflow,
@@ -369,72 +312,12 @@ function(search, record, email, runtime, log, format) {
     }
   }
 
-  // ─── Email builder ─────────────────────────────────────────────────────────
-  function buildCreditEmail(d) {
-    return [
-      '<html><body style="font-family:Arial,sans-serif;color:#222;max-width:600px;margin:0 auto;">',
-
-      '<div style="background:#0f1923;padding:20px 24px;border-radius:8px 8px 0 0;">',
-      '  <span style="color:#00d4aa;font-size:20px;font-weight:bold;">CVIS Core Tracker</span>',
-      '  <span style="color:#7a9bb5;font-size:13px;margin-left:12px;">Credit Notification</span>',
-      '</div>',
-
-      '<div style="border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;padding:24px;">',
-
-      '<p style="font-size:15px;margin-bottom:20px;">',
-      'A core has been received and logged in the CVIS Core Tracker. ',
-      'Please apply the appropriate credit to the customer\'s account in NetSuite.',
-      '</p>',
-
-      '<table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">',
-        row('Customer',          d.customer),
-        row('Sales Order',       '<strong>' + d.soNumber + '</strong>'),
-        row('Starter Model',     d.starterModel || '—'),
-        row('Serial Number',     d.serialNumber || '—'),
-        row('Date Received',     d.dateReceived),
-        row('Original Sale',     d.saleDate),
-        row('Days Since Sale',   '<strong>' + d.daysOut + ' days</strong>'),
-        row('Cores on Order',    d.qtyOrdered + ' total'),
-        row('Cores Received',    '<strong>' + d.qtyReceived + ' of ' + d.qtyOrdered + '</strong>' + (d.allReceived ? ' &nbsp;<span style="color:#15803d">✓ All received</span>' : ' &nbsp;<span style="color:#b45309">(' + d.qtyRemaining + ' still outstanding)</span>')),
-        row('Destination',       d.destination),
-        row('Received By',       d.receivedBy || '—'),
-      '</table>',
-
-      '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:16px;margin-bottom:20px;">',
-      '  <div style="font-size:12px;color:#166534;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Recommended credit amount</div>',
-      '  <div style="font-size:28px;font-weight:bold;color:#15803d;">' + d.creditAmount + '</div>',
-      '  <div style="font-size:12px;color:#166534;margin-top:4px;">' + d.creditLabel + ' &nbsp;|&nbsp; Original core fee: ' + d.coreFee + '</div>',
-      '</div>',
-
-      '<p style="font-size:13px;color:#666;border-top:1px solid #eee;padding-top:16px;margin-top:0;">',
-      'This is an automated notification from the CVIS Core Tracker. ',
-      'The credit amount shown is a recommendation based on the 30-day policy. ',
-      'Please verify against the original sales order before applying.',
-      '</p>',
-
-      '</div>',
-      '</body></html>'
-    ].join('\n');
-  }
-
-  function row(label, value) {
-    return [
-      '<tr style="border-bottom:1px solid #f0f0f0;">',
-      '  <td style="padding:8px 12px 8px 0;color:#666;white-space:nowrap;width:140px;">' + label + '</td>',
-      '  <td style="padding:8px 0;">' + value + '</td>',
-      '</tr>'
-    ].join('');
-  }
-
   function buildSuccessMessage(workflow, results) {
     var parts = [];
     if (results.soUpdated)        parts.push('Sales Order marked Core Received');
     if (results.invoiceUpdated)   parts.push('Invoice stamped');
     if (results.quoteUpdated)     parts.push('Quote stamped');
     if (results.coreBankUpdated)  parts.push('Core Bank record set to Applied');
-    if (results.emailSent)        parts.push('Credit notification sent to ' + APAR_EMAIL);
-    if (!results.emailSent && workflow === 'bin_pickup') parts.push('Email failed — check Script Execution Log');
-    if (workflow === 'bank_draw') parts.push('No credit email (bank draw — customer not charged upfront)');
     return parts.join(' \u2022 ');
   }
 
