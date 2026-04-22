@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -39,7 +39,7 @@ body {
   flex-direction: column;
 }
 
-/* ── TOP BAR ── */
+/* â”€â”€ TOP BAR â”€â”€ */
 .topbar {
   height: 52px;
   background: rgba(22,33,48,0.95);
@@ -100,14 +100,14 @@ body {
 .log-btn:hover { opacity: 0.88; }
 .log-btn svg { width: 14px; height: 14px; stroke: #0f1923; fill: none; stroke-width: 2.5; }
 
-/* ── LAYOUT ── */
+/* â”€â”€ LAYOUT â”€â”€ */
 .layout {
   display: flex;
   flex: 1;
   overflow: hidden;
 }
 
-/* ── SIDEBAR ── */
+/* â”€â”€ SIDEBAR â”€â”€ */
 .sidebar {
   width: var(--sidebar);
   background: var(--surface);
@@ -172,7 +172,7 @@ body {
   line-height: 1.7;
 }
 
-/* ── MAIN CONTENT ── */
+/* â”€â”€ MAIN CONTENT â”€â”€ */
 .main-area {
   flex: 1;
   overflow: hidden;
@@ -236,7 +236,7 @@ body {
 .metric-val.warn   { color: var(--warn); }
 .metric-val.danger { color: var(--danger); }
 
-/* ── TOOLBAR ── */
+/* â”€â”€ TOOLBAR â”€â”€ */
 .toolbar {
   display: flex;
   gap: 8px;
@@ -301,7 +301,7 @@ body {
 }
 .select-filter:focus { border-color: var(--accent); }
 
-/* ── TABLE ── */
+/* â”€â”€ TABLE â”€â”€ */
 .table-wrap {
   flex: 1;
   overflow-y: auto;
@@ -385,7 +385,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
 }
 .action-btn:hover { color: var(--accent); border-color: var(--accent); }
 
-/* ── BANK GRID ── */
+/* â”€â”€ BANK GRID â”€â”€ */
 .bank-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -424,7 +424,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
 }
 .count-row:last-child { border-bottom: none; }
 
-/* ── INVENTORY ROWS ── */
+/* â”€â”€ INVENTORY ROWS â”€â”€ */
 .inv-row {
   display: flex;
   align-items: center;
@@ -441,7 +441,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
 .vel-bar-fill.med { background: var(--warn); }
 .vel-bar-fill.low { background: var(--muted); }
 
-/* ── BACK HEADER ── */
+/* â”€â”€ BACK HEADER â”€â”€ */
 .drill-header {
   display: flex;
   align-items: center;
@@ -461,7 +461,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
 .back-btn:hover { border-color: var(--accent); }
 .back-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-/* ── MODAL ── */
+/* â”€â”€ MODAL â”€â”€ */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.65);
@@ -537,7 +537,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
   margin-bottom: 4px;
 }
 
-/* ── TOAST ── */
+/* â”€â”€ TOAST â”€â”€ */
 .toast {
   position: fixed; bottom: 24px; right: 24px;
   background: var(--card);
@@ -554,12 +554,12 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
 .toast.hidden { opacity: 0; transform: translateY(8px); pointer-events: none; }
 .toast-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
 
-/* ── EMPTY ── */
+/* â”€â”€ EMPTY â”€â”€ */
 .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
 .empty-icon { font-size: 36px; opacity: 0.3; margin-bottom: 12px; }
 .empty-text { font-size: 14px; }
 
-/* ── SCROLLBAR STYLE ── */
+/* â”€â”€ SCROLLBAR STYLE â”€â”€ */
 * { scrollbar-width: thin; scrollbar-color: var(--card) transparent; }
 *::-webkit-scrollbar { width: 6px; height: 6px; }
 *::-webkit-scrollbar-track { background: transparent; }
@@ -611,7 +611,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
     <div class="sidebar-footer">
       Account ID: 5471843<br>
       All data from NetSuite<br>
-      v1.0 — April 2026
+      v1.0 â€” April 2026
     </div>
   </div>
 
@@ -630,9 +630,10 @@ const PRICES={T100V:1575,T30:875,T100F:1275,'150BMG':600,'150BMGE':600,'150BMGE2
 function cp(m){const k=(m||'').replace(/ - CORE CHARGE/i,'').replace(/ CORE CHARGE/i,'').trim();if(PRICES[k])return PRICES[k];for(const pk of Object.keys(PRICES))if(k.toUpperCase().startsWith(pk.toUpperCase()))return PRICES[pk];return 600;}
 function fc(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function ini(name){return name.split(/[\s\-]+/).filter(w=>/^[A-Z]/i.test(w)).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
-function fd(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+function fd(d){if(!d)return'â€”';return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
 
 let OUTSTANDING = [];
+let BANKED = [];
 
 async function loadOutstanding() {
   try {
@@ -640,21 +641,31 @@ async function loadOutstanding() {
     const data = await res.json();
     if (data.success) {
       OUTSTANDING = data.cores.map(c => ({
-        soId    : c.soId,
-        so      : c.soNumber,
-        customer: c.customer,
-        saleDate: c.saleDate,
-        daysOut : c.daysOut,
-        model   : c.starterModel || '',
-        serial  : c.serialNumber || '',
-        fee     : c.coreFee,
+        soId        : c.soId,
+        so          : c.soNumber,
+        customer    : c.customer,
+        saleDate    : c.saleDate,
+        daysOut     : c.daysOut,
+        model       : c.starterModel || '',
+        serial      : c.serialNumber || '',
+        fee         : c.coreFee,
         creditAmount: c.creditAmount,
         creditLabel : c.creditLabel,
-        lineNum : c.lineNum,
+        lineNum     : c.lineNum,
         qtyOrdered  : c.qtyOrdered,
         qtyReceived : c.qtyReceived,
         qtyRemaining: c.qtyRemaining,
         lastPickup  : null
+      }));
+      BANKED = (data.banked || []).map(b => ({
+        id         : b.id,
+        customer   : b.customer,
+        corp       : b.corp,
+        model      : b.model,
+        serial     : b.serial,
+        dateCreated: b.dateCreated,
+        status     : b.status,
+        notes      : b.notes
       }));
     }
   } catch(e) {
@@ -662,104 +673,6 @@ async function loadOutstanding() {
   }
   render();
 }
-
-const BANKED=[
-  {customer:'Centerline - New York',corp:'Centerline (Corporate)',model:'6-LS-8 RH46-1-R-CV',serial:'69317',dateCreated:'10/30/2025'},
-  {customer:'Centerline - New York',corp:'Centerline (Corporate)',model:'T100V',serial:'N/A',dateCreated:'10/30/2025'},
-  {customer:'Cleveland Brothers CAT - Hunker/New Stanton',corp:'Cleveland Brothers CAT (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Cleveland Brothers CAT - Hunker/New Stanton',corp:'Cleveland Brothers CAT (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'Electric Starter Core',serial:'N/A',dateCreated:'3/27/2026'},
-  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'N/A',dateCreated:'3/27/2026'},
-  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'',dateCreated:'4/2/2026'},
-  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMG',serial:'',dateCreated:'4/2/2026'},
-  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'1214 56116',dateCreated:'2/27/2025'},
-  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'1005 283',dateCreated:'2/27/2025'},
-  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'rkl 39862',dateCreated:'2/27/2025'},
-  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'1001 143',dateCreated:'2/27/2025'},
-  {customer:'Dann Ocean Towing',corp:'Dann Ocean Towing',model:'150BMPD',serial:'NA',dateCreated:'2/27/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'140803-3',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'ST1000',serial:'NA',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'190425-3',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'23249',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'26883',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'M6364',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'170516-3',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'1403-214',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'181115-2',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NA',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'10007',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'SS100',serial:'SP160422018',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'321172',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMG',serial:'20072120',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'27903',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'T30',serial:'NA',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'NH22010',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'28280',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMP',serial:'160722-4',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMPD',serial:'1409-1125',dateCreated:'1/8/2025'},
-  {customer:'Davis Marine Service',corp:'Davis Marine Service',model:'150BMGE21RH6-6',serial:'SP060315078',dateCreated:'1/8/2025'},
-  {customer:'USA Compression: Beallsville',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
-  {customer:'USA Compression: Beallsville',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
-  {customer:'USA Compression: Beallsville',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ST150',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ST750GBD03L32',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35000',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35000',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35000',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'6-LS-8T RH46-1',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'6-LS-8T RH46-1',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'T100F',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ATS83-20311IKM',serial:'',dateCreated:'11/7/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'73024F',dateCreated:'11/24/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'45MA',serial:'2207 0728',dateCreated:'11/24/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'MISC',serial:'0918-7075',dateCreated:'11/24/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-35038',serial:'67778',dateCreated:'11/24/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'55-42008',serial:'66935',dateCreated:'11/24/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'ST150',serial:'SP230410010',dateCreated:'11/24/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'SS100',serial:'',dateCreated:'11/24/2025'},
-  {customer:'Lydia Ann - Corpus Christi',corp:'Lydia Ann Channel Services',model:'SS100',serial:'',dateCreated:'11/24/2025'},
-  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'',dateCreated:'11/7/2025'},
-  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
-  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
-  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
-  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'T100V',serial:'',dateCreated:'11/7/2025'},
-  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'35064',dateCreated:'1/30/2026'},
-  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'35170',dateCreated:'1/30/2026'},
-  {customer:'USA Compression: Montrose',corp:'USA Compression (Corporate)',model:'SS815',serial:'35439',dateCreated:'1/30/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'55-33000',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'150BMPD',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'T100V',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'T100V',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'SS825',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'SS825',serial:'',dateCreated:'2/9/2026'},
-  {customer:'American Commercial Barge Line - Paducah',corp:'American Commercial Barge Line',model:'SS825',serial:'',dateCreated:'2/9/2026'},
-  {customer:'McAllister - Puerto Rico',corp:'McAllister (Corporate)',model:'T100B',serial:'',dateCreated:'4/16/2026'},
-];
 
 const CVIS_INV=[
   {model:'T30',total:47,preEngage:11,inertia:35,vol12:70},
@@ -838,7 +751,7 @@ function renderOutstanding() {
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search-input" type="search" placeholder="Search SO, customer, model…" value="${outSearch}" oninput="outSearch=this.value;render()">
+      <input class="search-input" type="search" placeholder="Search SO, customer, modelâ€¦" value="${outSearch}" oninput="outSearch=this.value;render()">
     </div>
     <button class="chip ${outFilter==='all'?'active':''}" onclick="outFilter='all';render()">All</button>
     <button class="chip ${outFilter==='nopickup'?'active':''}" onclick="outFilter='nopickup';render()">No pickup (${noP})</button>
@@ -854,7 +767,7 @@ function renderOutstanding() {
         <th>Core fee</th><th>Last bin pickup</th><th>Status</th><th></th>
       </tr></thead>
       <tbody>
-        ${rows.length===0?`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No results</div></div></td></tr>`:
+        ${rows.length===0?`<tr><td colspan="8"><div class="empty"><div class="empty-icon">ðŸ“¦</div><div class="empty-text">No results</div></div></td></tr>`:
         rows.map(c=>{
           const noPickup=!c.lastPickup;
           const oldPickup=c.lastPickup&&new Date(c.lastPickup)<new Date('2025-01-01');
@@ -918,7 +831,7 @@ function renderDrill(customer) {
       <button class="back-btn" onclick="drillCustomer=null;render()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
       <div class="content-title" style="margin-bottom:0">${customer}</div>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">${rows[0].corp} — Customer-owned, stored in right container</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">${rows[0].corp} â€” Customer-owned, stored in right container</div>
     <div class="metrics-row">
       <div class="metric-card"><div class="metric-lbl">Banked</div><div class="metric-val accent">${rows.length}</div></div>
       <div class="metric-card"><div class="metric-lbl">Models</div><div class="metric-val">${Object.keys(models).length}</div></div>
@@ -933,7 +846,7 @@ function renderDrill(customer) {
         const hasS=r.serial&&r.serial!=='NA'&&r.serial!=='N/A'&&r.serial.trim();
         return `<tr>
           <td><span class="code-pill">${r.model}</span></td>
-          <td class="mono" style="font-size:12px;color:${hasS?'var(--text)':'var(--danger)'}">${hasS?r.serial:'—'}</td>
+          <td class="mono" style="font-size:12px;color:${hasS?'var(--text)':'var(--danger)'}">${hasS?r.serial:'â€”'}</td>
           <td style="color:var(--muted);font-size:12px">${fd(r.dateCreated)}</td>
           <td><span class="badge badge-teal">Banked</span></td>
         </tr>`;
@@ -964,7 +877,7 @@ function renderCVIS() {
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search-input" type="search" placeholder="Search model…" value="${cvisSearch}" oninput="cvisSearch=this.value;render()">
+      <input class="search-input" type="search" placeholder="Search modelâ€¦" value="${cvisSearch}" oninput="cvisSearch=this.value;render()">
     </div>
     <button class="chip ${cvisFilter==='all'?'active':''}" onclick="cvisFilter='all';render()">All</button>
     <button class="chip ${cvisFilter==='highvol'?'active':''}" onclick="cvisFilter='highvol';render()">High velocity</button>
@@ -982,9 +895,9 @@ function renderCVIS() {
         return `<tr>
           <td><span class="code-pill">${c.model}</span></td>
           <td class="mono" style="font-weight:500;color:var(--accent)">${c.total}</td>
-          <td class="mono" style="color:var(--muted)">${c.preEngage||'—'}</td>
-          <td class="mono" style="color:var(--muted)">${c.inertia||'—'}</td>
-          <td class="mono" style="color:var(--muted)">${c.vol12||'—'}</td>
+          <td class="mono" style="color:var(--muted)">${c.preEngage||'â€”'}</td>
+          <td class="mono" style="color:var(--muted)">${c.inertia||'â€”'}</td>
+          <td class="mono" style="color:var(--muted)">${c.vol12||'â€”'}</td>
           <td>
             <div style="display:flex;align-items:center;gap:10px">
               <span class="badge ${vB}">${vT}</span>
@@ -1040,7 +953,7 @@ function openReceiveModal(soId, lineNum, so, customer, model, fee, qtyOrdered, q
         </div>
         <div class="form-group">
           <label class="form-label">Notes / condition</label>
-          <input class="form-input" id="m-notes" type="text" placeholder="Any damage, missing parts, special notes…">
+          <input class="form-input" id="m-notes" type="text" placeholder="Any damage, missing parts, special notesâ€¦">
         </div>
         <div class="btn-row">
           <button class="btn-secondary" onclick="closeModal()">Cancel</button>
@@ -1069,12 +982,12 @@ async function submitReceipt() {
     qtyReceived : _modal.qtyReceived
   };
   closeModal();
-  showToast('Submitting to NetSuite…');
+  showToast('Submitting to NetSuiteâ€¦');
   try {
     const res    = await fetch('/api/bin-pickup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
     const result = await res.json();
     if (result.success) {
-      showToast('Core logged — ' + (result.results?.message || 'NetSuite updated.'));
+      showToast('Core logged â€” ' + (result.results?.message || 'NetSuite updated.'));
       loadOutstanding();
     } else {
       showToast('NetSuite error: ' + (result.error || 'Unknown error'));

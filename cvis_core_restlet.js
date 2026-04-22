@@ -99,7 +99,44 @@ function(search, record, runtime, log, format) {
         return true;
       });
 
-      return { success: true, count: results.length, cores: results };
+      // ── Banked cores: customrecord1532 where no Applied SO yet ────────────────
+      var banked = [];
+      try {
+        var bankSearch = search.create({
+          type: 'customrecord1532',
+          filters: [
+            ['custrecord174', 'isempty', ''] // Applied Sales Order is empty = still available
+          ],
+          columns: [
+            'internalid',
+            'custrecord168', // Starter Model
+            'custrecord169', // Serial Number
+            'custrecord170', // Date Received
+            'custrecord171', // Status
+            'custrecord173', // Notes
+            'custrecord175', // Core Owner (corp)
+            'custrecord193'  // ACS / Customer
+          ]
+        });
+
+        bankSearch.run().each(function(r) {
+          banked.push({
+            id          : r.getValue('internalid'),
+            customer    : r.getText('custrecord193') || r.getValue('custrecord193') || '',
+            corp        : r.getText('custrecord175') || r.getValue('custrecord175') || '',
+            model       : r.getValue('custrecord168') || '',
+            serial      : r.getValue('custrecord169') || '',
+            dateCreated : r.getValue('custrecord170') || '',
+            status      : r.getText('custrecord171')  || r.getValue('custrecord171') || '',
+            notes       : r.getValue('custrecord173') || ''
+          });
+          return true;
+        });
+      } catch (bankErr) {
+        log.error({ title: 'Banked cores search error', details: bankErr.message });
+      }
+
+      return { success: true, count: results.length, cores: results, banked: banked };
 
     } catch (e) {
       log.error({ title: 'GET Error', details: e });
