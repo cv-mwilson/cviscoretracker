@@ -1146,7 +1146,7 @@ function openNewReceiptModal() {
         <div class="modal-title">Log Core Receipt</div>
         <div style="background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
           <strong style="color:var(--accent)">New receipt</strong><br>
-          Fill in the details from the core you just received. This mirrors your FastFields Core Receiving Log.
+          Fill in the details from the core you just received.
         </div>
         <div class="form-group">
           <label class="form-label">From customer</label>
@@ -1219,7 +1219,7 @@ function openReceiveModal(rec, so, customer, model, fee, lastPickup, qtyOrdered,
         <div class="modal-title">Log Core Receipt</div>
         <div style="background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
           <strong style="color:var(--accent)">Workflow: Bin Pickup</strong><br>
-          Core arriving from customer's bin. FastFields form will auto-log this receipt. AP/AR will receive a credit notification email at account@cardinalvalley.com.
+          Core arriving from customer's bin. Marks SO/Invoice/Quote received and flips Core Bank status to Applied.
         </div>
         ${isMulti ? `
         <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:12px 14px;margin-bottom:12px;">
@@ -1299,7 +1299,7 @@ function openBankDrawModal(model, serial, customer) {
         <div class="modal-title">Use Banked Core for Sales Order</div>
         <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
           <strong style="color:#60a5fa">Workflow: Bank Draw</strong><br>
-          This core is already at CVIS. Applying it to a new SO marks it as Core Received on that order and flips its status to Applied. No FastFields form. No credit email — ${customer} is not charged upfront.
+          This core is already at CVIS. Applying it to a new SO marks it as Core Received on that order and flips its status to Applied. No credit email — ${customer} is not charged upfront.
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;">
           <div style="font-family:var(--mono);font-size:13px;color:var(--text);font-weight:500;">${model}</div>

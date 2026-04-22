@@ -6,11 +6,10 @@
 
 ## What Was Built
 
-A complete core tracking and operations system for Cardinal Valley's remanufactured air starter business. The system covers three areas:
+A complete core tracking and operations system for Cardinal Valley's remanufactured air starter business. The system covers two areas:
 
 1. **Core Bin Tracker** — a web app (desktop + mobile) that gives a real-time view of all outstanding cores, customer banked cores, and CVIS-owned inventory
-2. **NetSuite Integration** — a SuiteScript 2.0 RESTlet and OAuth Connected App that connects the tracker to NetSuite
-3. **FastFields Automation** — a webhook server that bridges FastFields form submissions with NetSuite
+2. **NetSuite Integration** — a SuiteScript 2.0 RESTlet, OAuth TBA auth, and a UserEventScript that connects the tracker to NetSuite and automates credit memo creation
 
 ---
 
@@ -37,21 +36,18 @@ Core collected from customer's bin and brought to CVIS shop:
 - Log receipt in the app (or FAB button)
 - SO, Invoice, Quote auto-stamped "Core Received"
 - Core Bank record status → Applied
-- FastFields Core Receiving Log auto-submitted as paper trail
-- AP/AR email notification sent to account@cardinalvalley.com with recommended credit amount (full if ≤30 days, 50% if >30 days) — credit is applied manually
+- Credit memo auto-created in NetSuite when custcol235 is checked on the Invoice line (handled by auto_core_credit.js)
 
 **Workflow B — Bank Draw**
 Pulling a core already at CVIS from a customer's bank for a new sales order:
 - Select core in Banked Cores tab → "Use for SO"
 - New SO stamped "Core Received"
 - Core Bank record status → Applied
-- No FastFields form (core already received)
 - No credit email (bin customers not charged upfront)
 
 ### Credit Policy
 - Within 30 days of sale date: **full credit**
 - Past 30 days: **50% credit**
-- Credit is calculated and shown in the AP/AR notification email but applied manually by the team
 
 ---
 
@@ -59,14 +55,11 @@ Pulling a core already at CVIS from a customer's bank for a new sales order:
 
 | File | Purpose |
 |---|---|
-| `cvis_core_tracker_mobile.html` | Mobile-first web app — the main Core Bin Tracker |
-| `cvis_core_tracker_desktop.html` | Desktop version of the tracker |
+| `mobile.html` | Mobile-first web app — the main Core Bin Tracker |
+| `desktop.html` | Desktop version of the tracker |
 | `cvis_core_restlet.js` | NetSuite SuiteScript 2.0 RESTlet — deploy inside NetSuite |
-| `webhook_server.js` | Node.js server — bridges FastFields webhooks to NetSuite |
-| `package.json` | Node.js dependencies for the webhook server |
-| `.env.example` | Environment variables template |
+| `auto_core_credit.js` | NetSuite UserEventScript — auto-creates credit memos on Invoice save |
 | `DEPLOY_README.md` | Step-by-step deployment guide |
-| `CVIS_Core_Tracker_Admin_Approval.docx` | Admin approval document for NetSuite integration |
 
 ---
 
@@ -75,16 +68,20 @@ Pulling a core already at CVIS from a customer's bank for a new sales order:
 ### From Your NetSuite Admin (one-time setup)
 1. Create a **Connected App** (Setup → Integration → Manage Integrations → New)
    - Name: CVIS Core Bin Tracker
-   - Auth: Client Credentials (Machine to Machine)
+   - Auth: Token-Based Authentication
    - Enable: REST Web Services + SuiteScript
-   - Copy the Client ID and Client Secret (shown once only)
+   - Copy the Consumer Key and Consumer Secret (shown once only)
 
 2. Upload and deploy **cvis_core_restlet.js**
    - Upload to: Documents → Files → SuiteScripts
    - Deploy as: RESTlet, Status: Released
    - Copy the External URL from the deployment page
 
-3. Create or verify these **custom fields** on Transaction Line Fields:
+3. Upload and deploy **auto_core_credit.js**
+   - Upload to: Documents → Files → SuiteScripts
+   - Deploy as: UserEventScript on Invoice, After Submit, Status: Released
+
+4. Create or verify these **custom fields** on Transaction Line Fields:
 
 | Field ID | Type | Purpose |
 |---|---|---|
@@ -95,41 +92,36 @@ Pulling a core already at CVIS from a customer's bank for a new sales order:
 | custcol_serial_number | Free Text | Core serial number(s) |
 | custcol_core_qty_ordered | Integer | How many cores on the order |
 | custcol_core_qty_received | Integer | How many have come back (increments per receipt) |
+| custcol235 | Checkbox | Trigger: auto credit memo creation on Invoice line |
+| custcol236 | Checkbox | Marks Invoice line as already processed (prevents duplicates) |
 
-Note: custcol_core_received (as "Core Rec'd?") already exists in your NetSuite.
+5. Create or verify these **custom fields** on Invoice body:
 
-### From FastFields
-- Contact FastFields support to enable webhooks on your account
-- Add webhook URL (your Railway server URL + /webhook/fastfields) to the Core Receiving Log form under Form Settings → Webhooks → On Submit
-- Provide FastFields field IDs for: reference number, model number, serial number, customer name, destination, submitted by
-
-### Webhook Server Deployment (Railway — free)
-1. Go to railway.app → sign up with GitHub
-2. Deploy webhook_server.js + package.json
-3. Add environment variables: NS_ACCOUNT_ID (5471843), NS_CLIENT_ID, NS_CLIENT_SECRET, NS_RESTLET_URL
-4. Railway provides your public webhook URL
+| Field ID | Type | Purpose |
+|---|---|---|
+| custbody_core_received | Checkbox | Invoice-level core received flag |
+| custbody_core_received_date | Date | When core was received |
+| custbody_core_credit_memo | List/Record (Credit Memo) | Links auto-generated credit memo for traceability |
 
 ---
 
 ## Mobile App Features
 
 ### Outstanding Tab
-- All 64 outstanding cores from core bin customers
+- All outstanding cores from core bin customers
 - Age badges: amber for 3-5 months, red ⚠ for 6+ months
-- "Over 6 months" filter chip — currently 15 flagged
+- "Over 6 months" filter chip
 - Quantity progress bar on multi-unit orders (e.g. 7 of 9 received)
 - Tap any card → pre-filled receipt form
 - + FAB button → blank receipt form for unexpected arrivals
 - Customer filter: dropdown on desktop, scrollable chips on mobile
 
 ### Customer Banked Cores Tab
-- 9 customers, 95 total cores in right container
 - Drill into any customer to see individual records with serial numbers
 - "Use for SO →" button on each core for bank draw workflow
 
 ### CVIS Owned Inventory Tab
 - Pulled from your CV_Core_Inventory.xlsx spreadsheet
-- 38 starter models, 400+ total cores in left container
 - Velocity indicator showing 12-month sales volume
 - Filter by: high velocity, pre-engage, inertia
 
@@ -143,10 +135,6 @@ A saved search called "Outstanding Cores Owed" was built directly in NetSuite wi
 - Formula {item} contains "CORE CHARGE"
 - Core Rec'd? = false
 
-This shows all 1,370 historical core charge lines where the checkbox is unchecked. To make it actionable, add:
-- Amount > 0 (removes cancelled/zero lines)
-- Date on or after 1/1/2024 (or your preferred cutoff)
-
 ---
 
 ## Quantity Tracking
@@ -156,24 +144,20 @@ When a customer orders multiple starters (e.g. 9 T100V), the core charge is a si
 - `custcol_core_qty_received` — increments by 1 per receipt log
 - Line stays open until qty_received = qty_ordered
 - Serial numbers accumulate comma-separated on the line
-- AP/AR email shows "X of Y received — Z still outstanding"
-- Subject line says "Partial Core Return (7/9)" vs "Core Return Credit Required"
 
 ---
 
 ## Key Contacts & Accounts
 - NetSuite Account ID: 5471843
-- AP/AR credit notification email: account@cardinalvalley.com
-- FastFields: Core Receiving Log form (webhook setup needed)
+- AP/AR email: account@cardinalvalley.com
 
 ---
 
 ## Outstanding Items / Next Steps
 1. NetSuite admin approval and Connected App creation
 2. RESTlet deployment
-3. Custom fields creation (qty_ordered, qty_received, destination, starter_model, serial_number)
-4. FastFields webhook enablement + field ID mapping
-5. Railway deployment of webhook server
+3. Auto credit memo script deployment
+4. Custom fields creation (verify all field IDs above)
+5. Create custbody_core_credit_memo body field on Invoice
 6. End-to-end test with one real core receipt
-7. Update FastFields field IDs in webhook_server.js (FF_FIELDS object)
-8. Confirm custom record type ID for Core Bank records (currently set to 'customrecord_starter_core' — verify with admin)
+7. Confirm custom record type ID for Core Bank records (currently set to 'customrecord_starter_core' — verify with admin)
