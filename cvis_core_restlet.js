@@ -46,11 +46,11 @@ function(search, record, runtime, log, format) {
       var results = [];
 
       var soSearch = search.create({
-        type: search.Type.SALES_ORDER,
+        type: search.Type.INVOICE,
         filters: [
           ['mainline',              'is',      'F'],
           'AND', ['item.name',      'contains', 'CORE CHARGE'],
-          'AND', ['status',         'anyof',   'SalesOrd:B','SalesOrd:D','SalesOrd:E','SalesOrd:F'],
+          'AND', ['status',         'anyof',   'CustInvc:A'],
           'AND', [
             ['custcol3', 'is',      'F'],
             'OR',
@@ -99,6 +99,61 @@ function(search, record, runtime, log, format) {
         return true;
       });
 
+      // ── Incoming cores: open Sales Orders with unreceived CORE CHARGE lines ───
+      var incomingResults = [];
+      try {
+        var soSearch2 = search.create({
+          type: search.Type.SALES_ORDER,
+          filters: [
+            ['mainline',              'is',      'F'],
+            'AND', ['item.name',      'contains', 'CORE CHARGE'],
+            'AND', ['status',         'anyof',   'SalesOrd:B','SalesOrd:D','SalesOrd:E','SalesOrd:F'],
+            'AND', [
+              ['custcol3', 'is',      'F'],
+              'OR',
+              ['custcol3', 'isempty', '']
+            ]
+          ],
+          columns: [
+            'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
+            'custcol3', 'custcol_core_received_date',
+            'custcol_core_qty_ordered', 'custcol_core_qty_received',
+            'custcol_starter_model', 'custcol_serial_number', 'internalid'
+          ]
+        });
+        soSearch2.run().each(function(r) {
+          var tranDate  = r.getValue('trandate');
+          var daysOut   = daysBetween(tranDate);
+          var fee       = parseFloat(r.getValue('rate')) || 0;
+          var ci        = creditInfo(daysOut, fee);
+          var qtyOrdered   = parseInt(r.getValue('custcol_core_qty_ordered'))  || parseInt(r.getValue('quantity')) || 1;
+          var qtyReceived  = parseInt(r.getValue('custcol_core_qty_received')) || 0;
+          var qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
+          if (qtyRemaining <= 0) return true;
+          incomingResults.push({
+            soId         : r.getValue('internalid'),
+            soNumber     : r.getValue('tranid'),
+            customer     : r.getText('entity'),
+            saleDate     : tranDate,
+            daysOut      : daysOut,
+            item         : r.getText('item'),
+            starterModel : r.getValue('custcol_starter_model'),
+            serialNumber : r.getValue('custcol_serial_number'),
+            coreFee      : fee,
+            creditAmount : ci.amount,
+            creditLabel  : ci.label,
+            lineNum      : r.getValue('line'),
+            coreReceived : r.getValue('custcol3') === 'T',
+            qtyOrdered   : qtyOrdered,
+            qtyReceived  : qtyReceived,
+            qtyRemaining : qtyRemaining
+          });
+          return true;
+        });
+      } catch (soErr) {
+        log.error({ title: 'Incoming SO search error', details: soErr.message });
+      }
+
       // ── Banked cores: customrecord1532 where no Applied SO yet ────────────────
       var banked = [];
       try {
@@ -136,7 +191,7 @@ function(search, record, runtime, log, format) {
         log.error({ title: 'Banked cores search error', details: bankErr.message });
       }
 
-      return { success: true, count: results.length, cores: results, banked: banked };
+      return { success: true, count: results.length, cores: results, incoming: incomingResults, banked: banked };
 
     } catch (e) {
       log.error({ title: 'GET Error', details: e });
@@ -169,9 +224,10 @@ function(search, record, runtime, log, format) {
 
       var results = {};
 
-      // ── 1. Mark the Sales Order line as Core Received ──────────────────────
+      // ── 1. Mark the transaction line as Core Received ─────────────────────
+      var recType = body.recordType === 'invoice' ? record.Type.INVOICE : record.Type.SALES_ORDER;
       var soRec = record.load({
-        type: record.Type.SALES_ORDER,
+        type: recType,
         id: soId,
         isDynamic: true
       });
@@ -237,6 +293,9 @@ function(search, record, runtime, log, format) {
       results.soUpdated = true;
       results.soId = savedSoId;
       log.audit({ title: 'SO core received stamped', details: soNumber + ' | ' + destination });
+
+      // ── 2 & 3. Stamp linked Invoice / Quote (Sales Order workflow only) ───────
+      if (body.recordType !== 'invoice') {
 
       // ── 2. Mark linked Invoice as Core Received ────────────────────────────
       var invoiceId = null;
@@ -312,6 +371,8 @@ function(search, record, runtime, log, format) {
         log.error({ title: 'Quote lookup error', details: qErr.message });
         results.quoteUpdated = false;
       }
+
+      } // end SO-only steps 2 & 3
 
       // ── 4. Flip Core Bank record status to "Applied" ───────────────────────
       if (coreBankRecordId) {
