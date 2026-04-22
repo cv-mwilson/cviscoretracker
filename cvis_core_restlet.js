@@ -317,13 +317,11 @@ function(search, record, runtime, log, format) {
       if (coreBankRecordId) {
         try {
           record.submitFields({
-            type: 'customrecord_starter_core', // adjust to your actual custom record type ID
+            type: 'customrecord1532',
             id: coreBankRecordId,
             values: {
-              custrecord_core_status           : 'Applied', // adjust to your field ID
-              custrecord_core_applied_so       : soId,
-              custrecord_core_applied_date     : new Date(),
-              custrecord_core_applied_by       : receivedBy
+              custrecord171 : 'Applied',  // Status
+              custrecord174 : soId        // Applied Sales Order
             },
             options: { enableSourcing: true, ignoreMandatoryFields: true }
           });
