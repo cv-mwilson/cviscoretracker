@@ -52,14 +52,14 @@ function(search, record, runtime, log, format) {
           'AND', ['item.name',      'contains', 'CORE CHARGE'],
           'AND', ['status',         'anyof',   'SalesOrd:B','SalesOrd:D','SalesOrd:E','SalesOrd:F'],
           'AND', [
-            ['custcol_core_received', 'is',      'F'],
+            ['custcol3', 'is',      'F'],
             'OR',
-            ['custcol_core_received', 'isempty', '']
+            ['custcol3', 'isempty', '']
           ]
         ],
         columns: [
           'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
-          'custcol_core_received', 'custcol_core_received_date',
+          'custcol3', 'custcol_core_received_date',
           'custcol_core_qty_ordered', 'custcol_core_qty_received',
           'custcol_starter_model', 'custcol_serial_number', 'internalid'
         ]
@@ -91,7 +91,7 @@ function(search, record, runtime, log, format) {
           creditAmount  : ci.amount,
           creditLabel   : ci.label,
           lineNum       : r.getValue('line'),
-          coreReceived  : r.getValue('custcol_core_received') === 'T',
+          coreReceived  : r.getValue('custcol3') === 'T',
           qtyOrdered    : qtyOrdered,
           qtyReceived   : qtyReceived,
           qtyRemaining  : qtyRemaining
@@ -203,7 +203,7 @@ function(search, record, runtime, log, format) {
 
           // Only mark fully received when all cores are in
           if (allReceived) {
-            soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_core_received', value: true });
+            soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol3', value: true });
           }
 
           if (serialNum) {
