@@ -709,73 +709,36 @@ function fc(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maxim
 function ini(name){return name.split(/[\s\-]+/).filter(w=>/^[A-Z]/i.test(w)).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
 function fd(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
 
-const OUTSTANDING = [
-  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10750,so:'SO24881',model:'150BMP',saleDate:'2025-10-15',qtyOrdered:1,qtyReceived:0},
-  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10751,so:'SO24881',model:'150BMP',saleDate:'2025-10-15',qtyOrdered:1,qtyReceived:0},
-  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10752,so:'SO24882',model:'T30',saleDate:'2025-10-15',qtyOrdered:2,qtyReceived:0},
-  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10753,so:'SO24882',model:'T30',saleDate:'2025-10-15',qtyOrdered:2,qtyReceived:0},
-  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10756,so:'SO24885',model:'150BMP',saleDate:'2025-10-15',qtyOrdered:1,qtyReceived:0},
-  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:10768,so:'SO24934',model:'T100D',saleDate:'2025-10-20',qtyOrdered:1,qtyReceived:0},
-  {customer:'Centerline - New York',lastPickup:'10/28/2025',rec:11293,so:'SO25699',model:'T50',saleDate:'2025-12-01',qtyOrdered:1,qtyReceived:0},
-  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:10785,so:'SO25111',model:'T30',saleDate:'2025-10-28',qtyOrdered:1,qtyReceived:0},
-  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:11290,so:'SO25110',model:'T100V',saleDate:'2025-10-28',qtyOrdered:1,qtyReceived:0},
-  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:11330,so:'SO25724',model:'T100V',saleDate:'2025-12-15',qtyOrdered:1,qtyReceived:0},
-  {customer:'Cleveland Brothers CAT - Mansfield',lastPickup:'11/4/2025',rec:11436,so:'SO25830',model:'T100V',saleDate:'2026-01-05',qtyOrdered:1,qtyReceived:0},
-  {customer:'Dann Ocean Towing',lastPickup:null,rec:11074,so:'SO25537',model:'T100B',saleDate:'2025-11-10',qtyOrdered:1,qtyReceived:0},
-  {customer:'Davis Marine Service',lastPickup:null,rec:10898,so:'SO25195',model:'150BMG',saleDate:'2025-09-20',qtyOrdered:1,qtyReceived:0},
-  {customer:'Davis Marine Service',lastPickup:null,rec:11180,so:'SO25566',model:'150BMP',saleDate:'2025-11-25',qtyOrdered:1,qtyReceived:0},
-  {customer:'Davis Marine Service',lastPickup:null,rec:11439,so:'SO25955',model:'T100V',saleDate:'2026-02-10',qtyOrdered:3,qtyReceived:0},
-  {customer:'Davis Marine Service',lastPickup:null,rec:11440,so:'SO25955',model:'T100V',saleDate:'2026-02-10',qtyOrdered:3,qtyReceived:0},
-  {customer:'Davis Marine Service',lastPickup:null,rec:11441,so:'SO25955',model:'T100V',saleDate:'2026-02-10',qtyOrdered:3,qtyReceived:0},
-  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10690,so:'SO24620',model:'150BMGE21RH6-R',saleDate:'2025-10-10',qtyOrdered:3,qtyReceived:0},
-  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10691,so:'SO24620',model:'150BMGE21RH6-R',saleDate:'2025-10-10',qtyOrdered:3,qtyReceived:0},
-  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10692,so:'SO24626',model:'150BMGE21RH6-R',saleDate:'2025-10-12',qtyOrdered:1,qtyReceived:0},
-  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:10774,so:'SO25018',model:'T100B',saleDate:'2025-10-25',qtyOrdered:1,qtyReceived:0},
-  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:11043,so:'SO25246',model:'SS815',saleDate:'2025-11-01',qtyOrdered:2,qtyReceived:0},
-  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:11044,so:'SO25246',model:'SS815',saleDate:'2025-11-01',qtyOrdered:2,qtyReceived:0},
-  {customer:'Stasinos Marine',lastPickup:'10/28/2025',rec:11064,so:'SO25324',model:'MISC',saleDate:'2025-11-08',qtyOrdered:1,qtyReceived:0},
-  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11066,so:'SO25358',model:'T100V',saleDate:'2025-11-12',qtyOrdered:3,qtyReceived:0},
-  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11067,so:'SO25358',model:'T100V',saleDate:'2025-11-12',qtyOrdered:3,qtyReceived:0},
-  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11068,so:'SO25358',model:'T100V',saleDate:'2025-11-12',qtyOrdered:3,qtyReceived:0},
-  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11071,so:'SO25359',model:'T100B',saleDate:'2025-11-12',qtyOrdered:1,qtyReceived:0},
-  {customer:'USA Compression: Beallsville',lastPickup:'7/10/2025',rec:11431,so:'SO25764',model:'SS825',saleDate:'2026-01-20',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10660,so:'SO24180',model:'SS815',saleDate:'2025-09-05',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10661,so:'SO24180',model:'SS815',saleDate:'2025-09-05',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10681,so:'SO24541',model:'T100B',saleDate:'2025-09-28',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10682,so:'SO24541',model:'T100B',saleDate:'2025-09-28',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10689,so:'SO24595',model:'T30',saleDate:'2025-10-02',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10693,so:'SO24633',model:'150BMG',saleDate:'2025-10-05',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10743,so:'SO24814',model:'SS815',saleDate:'2025-10-18',qtyOrdered:4,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10744,so:'SO24814',model:'SS815',saleDate:'2025-10-18',qtyOrdered:4,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10745,so:'SO24814',model:'T100B',saleDate:'2025-10-18',qtyOrdered:4,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10746,so:'SO24814',model:'T100B',saleDate:'2025-10-18',qtyOrdered:4,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10446,so:'SO22178',model:'T100B',saleDate:'2025-04-10',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10464,so:'SO22368',model:'150BMG',saleDate:'2025-04-22',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lydia Ann - Corpus Christi',lastPickup:'11/12/2025',rec:10479,so:'SO22416',model:'150T',saleDate:'2025-04-28',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:10699,so:'SO24641',model:'150BMP',saleDate:'2025-10-08',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:11442,so:'SO25990',model:'',saleDate:'2026-02-20',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:11443,so:'SO25990',model:'',saleDate:'2026-02-20',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lydia Ann - Channelview (Houston)',lastPickup:'3/14/2024',rec:11444,so:'SO25990',model:'',saleDate:'2026-02-20',qtyOrdered:1,qtyReceived:0},
-  {customer:'USA Compression: Montrose',lastPickup:'11/4/2025',rec:10722,so:'SO24713',model:'T100B',saleDate:'2025-10-15',qtyOrdered:1,qtyReceived:0},
-  {customer:'USA Compression: Montrose',lastPickup:'11/4/2025',rec:10729,so:'SO24736',model:'T100B',saleDate:'2025-10-17',qtyOrdered:1,qtyReceived:0},
-  {customer:'Williams Gas - Fort Beeler',lastPickup:'11/4/2025',rec:11446,so:'SO25999',model:'SS825',saleDate:'2026-02-22',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:10786,so:'SO25119',model:'150T',saleDate:'2025-10-30',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11174,so:'SO25541',model:'SS815',saleDate:'2025-11-18',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11175,so:'SO25545',model:'45MA',saleDate:'2025-11-18',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11176,so:'SO25541',model:'SS815',saleDate:'2025-11-18',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11182,so:'SO25394',model:'ST700',saleDate:'2025-11-05',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11183,so:'SO25394',model:'ST700',saleDate:'2025-11-05',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11291,so:'SO25686',model:'T100B',saleDate:'2025-12-08',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11328,so:'SO25723',model:'ST1000',saleDate:'2025-12-12',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11329,so:'SO25723',model:'ST1000',saleDate:'2025-12-12',qtyOrdered:2,qtyReceived:0},
-  {customer:'Lee Engineering - New Orleans',lastPickup:null,rec:11454,so:'SO26085',model:'SS100',saleDate:'2026-03-01',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11184,so:'SO25600',model:'T100V',saleDate:'2025-11-28',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11292,so:'SO25693',model:'T30',saleDate:'2025-12-05',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11437,so:'SO25852',model:'T100F',saleDate:'2026-01-15',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11447,so:'SO26002',model:'T100F',saleDate:'2026-02-18',qtyOrdered:1,qtyReceived:0},
-  {customer:'Lee Engineering - Paducah',lastPickup:null,rec:11453,so:'SO26041',model:'150BMG',saleDate:'2026-02-25',qtyOrdered:1,qtyReceived:0},
-];
-OUTSTANDING.forEach(c=>{c.fee=corePrice(c.model)});
+let OUTSTANDING = [];
+
+async function loadOutstanding() {
+  try {
+    const res  = await fetch('/api/cores');
+    const data = await res.json();
+    if (data.success) {
+      OUTSTANDING = data.cores.map(c => ({
+        soId        : c.soId,
+        so          : c.soNumber,
+        customer    : c.customer,
+        saleDate    : c.saleDate,
+        daysOut     : c.daysOut,
+        model       : c.starterModel || '',
+        serial      : c.serialNumber || '',
+        fee         : c.coreFee,
+        creditAmount: c.creditAmount,
+        creditLabel : c.creditLabel,
+        lineNum     : c.lineNum,
+        qtyOrdered  : c.qtyOrdered,
+        qtyReceived : c.qtyReceived,
+        qtyRemaining: c.qtyRemaining,
+        lastPickup  : null
+      }));
+    }
+  } catch(e) {
+    console.error('Failed to load cores:', e);
+  }
+  render();
+}
 
 const BANKED = [
   {customer:'Centerline - New York',corp:'Centerline (Corporate)',model:'6-LS-8 RH46-1-R-CV',serial:'69317',dateCreated:'10/30/2025'},
@@ -988,7 +951,7 @@ function renderOutstanding() {
         const ageBadge = ageOver6 ? `<span class="badge badge-danger" style="margin-left:6px">⚠ ${ageLabel(mo)}</span>` : (mo >= 3 ? `<span class="badge badge-warn" style="margin-left:6px">${ageLabel(mo)}</span>` : '');
         const qtyBar   = qtyProgressHTML(c.qtyOrdered || 1, c.qtyReceived || 0);
         const isMulti  = (c.qtyOrdered || 1) > 1;
-        return `<div class="core-card ${cls}" onclick="openReceiveModal('${c.rec}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},'${c.lastPickup||''}',${c.qtyOrdered||1},${c.qtyReceived||0})">
+        return `<div class="core-card ${cls}" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0})">
           <div class="core-card-top">
             <div class="core-so">${c.so}${isMulti ? ` <span class="badge badge-blue" style="margin-left:6px">Qty ${c.qtyOrdered}</span>` : ''}</div>
             <div class="core-fee">${fc(c.fee)}</div>
@@ -1001,7 +964,7 @@ function renderOutstanding() {
           ${qtyBar}
           <div class="core-card-bottom" style="margin-top:${qtyBar?'8px':'0'}">
             <span class="badge ${noP?'badge-danger':oldP?'badge-warn':'badge-green'}">${noP?'No pickup on record':oldP?'Pickup: '+fd(c.lastPickup):'Last: '+fd(c.lastPickup)}</span>
-            <span class="days-text">Rec #${c.rec}</span>
+            <span class="days-text">SO ID: ${c.soId}</span>
           </div>
         </div>`;
       }).join('')
@@ -1203,7 +1166,10 @@ function submitNewReceipt() {
 }
 
 // ── Pre-filled receipt modal (tapped from a core card) ─────────────────────
-function openReceiveModal(rec, so, customer, model, fee, lastPickup, qtyOrdered, qtyReceived) {
+let _modal = {};
+
+function openReceiveModal(soId, lineNum, so, customer, model, fee, qtyOrdered, qtyReceived) {
+  _modal = { soId, lineNum, so, customer, model, fee, qtyOrdered, qtyReceived };
   qtyOrdered  = qtyOrdered  || 1;
   qtyReceived = qtyReceived || 0;
   const qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
@@ -1267,27 +1233,45 @@ function openReceiveModal(rec, so, customer, model, fee, lastPickup, qtyOrdered,
           <label class="form-label">Notes / condition</label>
           <input class="form-input" id="bp-notes" type="text" placeholder="Any damage, missing parts…">
         </div>
-        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px">
-          NetSuite not connected yet — submit will log locally. Once integrated: SO, Invoice & Quote auto-update and AP/AR email fires automatically.
-        </div>
-        <button class="btn-primary" onclick="submitBinPickup('${so||''}','${customer.replace(/'/g,"\'")}','${model.replace(/'/g,"\'")}',${creditFull},${qtyOrdered},${qtyReceived})">Submit — log 1 core receipt</button>
+        <button class="btn-primary" onclick="submitBinPickup()">Submit — log 1 core receipt</button>
         <button class="btn-secondary" onclick="closeModal()">Cancel</button>
       </div>
     </div>`;
   document.body.classList.add('no-scroll');
 }
 
-function submitBinPickup(so, customer, model, fee, qtyOrdered, qtyReceived) {
-  qtyOrdered  = qtyOrdered  || 1;
-  qtyReceived = qtyReceived || 0;
-  const newReceived  = qtyReceived + 1;
-  const remaining    = Math.max(0, qtyOrdered - newReceived);
-  const isMulti      = qtyOrdered > 1;
+async function submitBinPickup() {
+  const payload = {
+    soId        : _modal.soId,
+    lineNum     : _modal.lineNum,
+    soNumber    : document.getElementById('bp-so').value.trim(),
+    customer    : _modal.customer,
+    starterModel: document.getElementById('bp-model').value.trim(),
+    serialNumber: document.getElementById('bp-serial').value.trim(),
+    receivedBy  : document.getElementById('bp-by').value.trim(),
+    destination : document.getElementById('bp-dest').value,
+    coreFee     : _modal.fee,
+    creditAmount: _modal.fee,
+    creditLabel : 'Full credit (within 30 days)',
+    daysOut     : 0,
+    saleDate    : '',
+    qtyOrdered  : _modal.qtyOrdered,
+    qtyReceived : _modal.qtyReceived
+  };
   closeModal();
-  const qtyMsg = isMulti
-    ? ` (${newReceived} of ${qtyOrdered} cores — ${remaining} still outstanding)`
-    : '';
-  showToast('Core logged for ' + (so||'SO') + qtyMsg + '. AP/AR notified once NetSuite connected.');
+  showToast('Submitting to NetSuite…');
+  try {
+    const res    = await fetch('/api/bin-pickup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Core logged — ' + (result.results?.message || 'NetSuite updated.'));
+      loadOutstanding();
+    } else {
+      showToast('NetSuite error: ' + (result.error || 'Unknown error'));
+    }
+  } catch(e) {
+    showToast('Request failed: ' + e.message);
+  }
 }
 
 // ── Workflow B: Bank draw — pulling banked core for a new sales order ───────
@@ -1318,9 +1302,6 @@ function openBankDrawModal(model, serial, customer) {
           <label class="form-label">Notes</label>
           <input class="form-input" id="bd-notes" type="text" placeholder="Optional notes…">
         </div>
-        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px">
-          NetSuite not connected yet — once integrated: new SO marked Core Received, Core Bank status → Applied, both happen instantly.
-        </div>
         <button class="btn-primary" onclick="submitBankDraw('${model.replace(/'/g,"\'")}','${customer.replace(/'/g,"\'")}')">Apply to Sales Order</button>
         <button class="btn-secondary" onclick="closeModal()">Cancel</button>
       </div>
@@ -1328,11 +1309,28 @@ function openBankDrawModal(model, serial, customer) {
   document.body.classList.add('no-scroll');
 }
 
-function submitBankDraw(model, customer) {
+async function submitBankDraw(model, customer) {
   const so = document.getElementById('bd-so').value.trim();
   if (!so) { showToast('Please enter a sales order number.'); return; }
+  const payload = {
+    soNumber    : so,
+    customer    : customer,
+    starterModel: model,
+    receivedBy  : document.getElementById('bd-by').value.trim()
+  };
   closeModal();
-  showToast(model + ' applied to ' + so + '. Core Bank status → Applied once NetSuite is connected.');
+  showToast('Submitting to NetSuite…');
+  try {
+    const res    = await fetch('/api/bank-draw', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Bank draw logged — ' + (result.results?.message || 'NetSuite updated.'));
+    } else {
+      showToast('NetSuite error: ' + (result.error || 'Unknown error'));
+    }
+  } catch(e) {
+    showToast('Request failed: ' + e.message);
+  }
 }
 
 function closeModal() {
@@ -1388,7 +1386,7 @@ function renderOutstandingCards() {
       : (mo >= 3 ? `<span class="badge badge-warn" style="margin-left:6px">${ageLabel(mo)}</span>` : '');
     const qtyBar  = qtyProgressHTML(c.qtyOrdered || 1, c.qtyReceived || 0);
     const isMulti = (c.qtyOrdered || 1) > 1;
-    return `<div class="core-card ${cls}" onclick="openReceiveModal('${c.rec}','${c.so}','${c.customer.replace(/'/g,"\'")}','${c.model}',${c.fee},'${c.lastPickup||''}',${c.qtyOrdered||1},${c.qtyReceived||0})">
+    return `<div class="core-card ${cls}" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0})">
       <div class="core-card-top">
         <div class="core-so">${c.so}${isMulti ? ` <span class="badge badge-blue" style="margin-left:6px">Qty ${c.qtyOrdered}</span>` : ''}</div>
         <div class="core-fee">${fc(c.fee)}</div>
@@ -1495,9 +1493,7 @@ render = function() {
   if (cvisIn && cvisSearch) cvisIn.value = cvisSearch;
 };
 
-render();
+loadOutstanding();
 </script>
-</body>
-</html>
 </body>
 </html>
