@@ -1195,7 +1195,8 @@ async function submitReceipt() {
     saleDate    : '',
     qtyOrdered  : _modal.qtyOrdered,
     qtyReceived : _modal.qtyReceived,
-    recordType  : _modal.recordType
+    recordType  : _modal.recordType,
+    notes       : document.getElementById('m-notes').value.trim()
   };
   closeModal();
   showToast('Submitting to NetSuite...');
