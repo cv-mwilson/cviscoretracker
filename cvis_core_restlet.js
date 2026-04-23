@@ -49,7 +49,7 @@ function(search, record, runtime, log, format) {
         type: search.Type.INVOICE,
         filters: [
           ['mainline',              'is',      'F'],
-          'AND', ['item.itemid',     'contains', 'CORE CHARGE'],
+          'AND', ['item.name',       'contains', 'CORE CHARGE'],
           'AND', ['status',         'anyof',   'CustInvc:A'],
           'AND', [
             ['custcol3', 'is',      'F'],
@@ -100,7 +100,7 @@ function(search, record, runtime, log, format) {
           type: search.Type.SALES_ORDER,
           filters: [
             ['mainline',              'is',      'F'],
-            'AND', ['item.itemid',     'contains', 'CORE CHARGE'],
+            'AND', ['item.name',       'contains', 'CORE CHARGE'],
             'AND', ['status',         'anyof',   'SalesOrd:B','SalesOrd:D','SalesOrd:E','SalesOrd:F'],
             'AND', [
               ['custcol3', 'is',      'F'],
