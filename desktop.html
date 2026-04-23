@@ -779,7 +779,7 @@ function renderOutstanding() {
   const custs=[...new Set(pool.map(c=>c.customer))].sort();
   let rows=pool.filter(c=>{
     const q=outSearch.toLowerCase();
-    if(q&&!(c.customer+c.model+c.so).toLowerCase().includes(q))return false;
+    if(q&&!(c.customer+c.model+c.so+c.createdFrom).toLowerCase().includes(q))return false;
     if(outFilter==='nopickup'&&c.lastPickup)return false;
     if(outFilter!=='all'&&outFilter!=='nopickup'&&c.customer!==outFilter)return false;
     return true;
@@ -814,7 +814,7 @@ function renderOutstanding() {
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
             <td><span style="background:var(--accent);color:#fff;font-family:var(--head);font-size:13px;font-weight:700;padding:4px 10px;border-radius:var(--rs);white-space:nowrap">${c.so}</span></td>
-            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">-</span>'}</td>
+            <td class="mono" style="font-size:12px">${c.createdFrom?(c.createdFrom.includes('#')?c.createdFrom.split('#').pop().trim():c.createdFrom):'<span style="color:var(--muted)">-</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
@@ -904,7 +904,7 @@ function renderCoreBinPickups() {
   const custs=[...new Set(pool.map(c=>c.customer))].sort();
   let rows=pool.filter(c=>{
     const q=outSearch.toLowerCase();
-    if(q&&!(c.customer+c.model+c.so).toLowerCase().includes(q))return false;
+    if(q&&!(c.customer+c.model+c.so+c.createdFrom).toLowerCase().includes(q))return false;
     if(outFilter==='nopickup'&&c.lastPickup)return false;
     if(outFilter!=='all'&&outFilter!=='nopickup'&&c.customer!==outFilter)return false;
     return true;
@@ -939,7 +939,7 @@ function renderCoreBinPickups() {
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
             <td><span style="background:var(--accent);color:#fff;font-family:var(--head);font-size:13px;font-weight:700;padding:4px 10px;border-radius:var(--rs);white-space:nowrap">${c.so}</span></td>
-            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">-</span>'}</td>
+            <td class="mono" style="font-size:12px">${c.createdFrom?(c.createdFrom.includes('#')?c.createdFrom.split('#').pop().trim():c.createdFrom):'<span style="color:var(--muted)">-</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
@@ -957,7 +957,7 @@ function renderIncoming() {
   const custs=[...new Set(INCOMING.map(c=>c.customer))].sort();
   let rows=INCOMING.filter(c=>{
     const q=outSearch.toLowerCase();
-    if(q&&!(c.customer+c.model+c.so).toLowerCase().includes(q))return false;
+    if(q&&!(c.customer+c.model+c.so+c.createdFrom).toLowerCase().includes(q))return false;
     if(outFilter!=='all'&&outFilter!=='nopickup'&&c.customer!==outFilter)return false;
     return true;
   });
@@ -990,7 +990,7 @@ function renderIncoming() {
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'salesorder')">
             <td><span style="background:var(--accent);color:#fff;font-family:var(--head);font-size:13px;font-weight:700;padding:4px 10px;border-radius:var(--rs);white-space:nowrap">${c.so}</span></td>
-            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">-</span>'}</td>
+            <td class="mono" style="font-size:12px">${c.createdFrom?(c.createdFrom.includes('#')?c.createdFrom.split('#').pop().trim():c.createdFrom):'<span style="color:var(--muted)">-</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
