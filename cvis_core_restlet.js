@@ -49,8 +49,7 @@ function(search, record, runtime, log, format) {
         type: search.Type.INVOICE,
         filters: [
           ['mainline',              'is',      'F'],
-          'AND', ['item.name',       'contains', 'CORE CHARGE'],
-          'AND', ['status',         'anyof',   'CustInvc:A']
+          'AND', ['item.name',       'contains', 'CORE CHARGE']
         ],
         columns: [
           'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
