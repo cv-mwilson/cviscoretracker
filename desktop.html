@@ -644,7 +644,8 @@ async function loadOutstanding() {
   try {
     const res  = await fetch('/api/cores');
     const data = await res.json();
-    console.log('[CVIS] /api/cores response:', JSON.stringify(data).slice(0,500));
+    console.log('[CVIS] /api/cores response:', JSON.stringify(data).slice(0,2000));
+    console.log('[CVIS] invoice raw count:', data._invoiceRawCount);
     if (!data.success) {
       document.getElementById('main-area').innerHTML = `<div style="padding:40px 24px"><div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:20px;font-family:monospace;font-size:13px;color:#fca5a5;white-space:pre-wrap">NetSuite error:\n${data.error || JSON.stringify(data)}</div></div>`;
       return;
