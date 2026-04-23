@@ -214,7 +214,7 @@ function(search, record, log) {
           type: 'supportcase',
           filters: [
             ['custevent2',  'anyof',  '1'],
-            'AND', ['category', 'anyof', '1', '2'] // update IDs: 1=Warranty, 2=Root Cause
+            'AND', ['category', 'anyof', '5', '7']
           ],
           columns: ['casenumber', 'company', 'quicknote', 'custevent_cv_items', 'internalid']
         });
