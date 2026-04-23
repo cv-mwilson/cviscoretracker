@@ -51,7 +51,7 @@ function(search, record, log) {
           ]
         ],
         columns: [
-          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid', 'createdfrom'
+          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid', 'createdfrom', 'custbody75'
         ]
       });
 
@@ -80,7 +80,8 @@ function(search, record, log) {
             qtyOrdered   : qty,
             qtyReceived  : 0,
             qtyRemaining : qty,
-            createdFrom  : r.getText('createdfrom') || ''
+            createdFrom  : r.getText('createdfrom') || '',
+            binPickup    : r.getValue('custbody75') === 'T'
           });
           return true;
         });
