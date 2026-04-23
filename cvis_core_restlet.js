@@ -42,12 +42,11 @@ function(search, record, log) {
           'AND', ['item.class', 'anyof',   '21']
         ],
         columns: [
-          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
-          'custcol3', 'internalid'
+          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid'
         ]
       });
 
-      soSearch.run().each(function(r) {
+      try { soSearch.run().each(function(r) {
         var tranDate  = r.getValue('trandate');
         var daysOut   = daysBetween(tranDate);
         var fee       = parseFloat(r.getValue('rate')) || 0;
@@ -71,7 +70,7 @@ function(search, record, log) {
           qtyRemaining : qty
         });
         return true;
-      });
+      }); } catch(invErr) { log.error({ title: 'Invoice search error', details: invErr.message }); results._invoiceError = invErr.message; }
 
       // ── Incoming cores: open Sales Orders with unreceived CORE CHARGE lines ───
       var incomingResults = [];
