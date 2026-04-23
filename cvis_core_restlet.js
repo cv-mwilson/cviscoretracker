@@ -30,6 +30,10 @@ function(search, record, log) {
     else               return { pct: 50,  amount: fee * 0.5,  label: '50% credit (past 30 days)'    };
   }
 
+  function modelFromItem(itemText) {
+    return (itemText || '').replace(/\s*-?\s*CORE CHARGE.*/i, '').trim();
+  }
+
   // ─── GET: Pull outstanding core charge lines ────────────────────────────────
   function doGet(params) {
     try {
@@ -60,13 +64,15 @@ function(search, record, log) {
           var ci        = creditInfo(daysOut, fee);
           var qty       = parseInt(r.getValue('quantity')) || 1;
 
+          var itemText = r.getText('item') || '';
           results.push({
             soId         : r.getValue('internalid'),
             soNumber     : r.getValue('tranid'),
             customer     : r.getText('entity'),
             saleDate     : tranDate,
             daysOut      : daysOut,
-            item         : r.getText('item'),
+            item         : itemText,
+            starterModel : modelFromItem(itemText),
             coreFee      : fee,
             creditAmount : ci.amount,
             creditLabel  : ci.label,
@@ -106,13 +112,15 @@ function(search, record, log) {
           var fee      = parseFloat(r.getValue('rate')) || 0;
           var ci       = creditInfo(daysOut, fee);
           var qty      = parseInt(r.getValue('quantity')) || 1;
+          var itemText2 = r.getText('item') || '';
           incomingResults.push({
             soId         : r.getValue('internalid'),
             soNumber     : r.getValue('tranid'),
             customer     : r.getText('entity'),
             saleDate     : tranDate,
             daysOut      : daysOut,
-            item         : r.getText('item'),
+            item         : itemText2,
+            starterModel : modelFromItem(itemText2),
             coreFee      : fee,
             creditAmount : ci.amount,
             creditLabel  : ci.label,
