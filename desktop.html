@@ -593,7 +593,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
 
   <!-- SIDEBAR -->
   <div class=”sidebar”>
-    <div class=”nav-section”>Operations</div>
+    <div class=”nav-section”>Views</div>
     <div class=”nav-item active” onclick=”switchTab('outstanding',this)” id=”nav-outstanding”>
       <svg viewBox=”0 0 24 24”><path d=”M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2”/><path d=”M9 12h6M9 16h4”/></svg>
       Cores from Fulfilled Orders
@@ -604,16 +604,6 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
       Cores for Pending Orders
       <span class=”nav-count” id=”nav-count-incoming”>—</span>
     </div>
-    <div class=”nav-item” onclick=”switchTab('warranty',this)” id=”nav-warranty”>
-      <svg viewBox=”0 0 24 24”><path d=”M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z”/></svg>
-      Outstanding Warranty Cores
-    </div>
-    <div class=”nav-item” onclick=”switchTab('holdlog',this)” id=”nav-holdlog”>
-      <svg viewBox=”0 0 24 24”><path d=”M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z”/><polyline points=”14 2 14 8 20 8”/><line x1=”12” y1=”18” x2=”12” y2=”12”/><line x1=”9” y1=”15” x2=”15” y2=”15”/></svg>
-      CVIS Hold Log Entry
-    </div>
-
-    <div class=”nav-section” style=”margin-top:12px;”>Sales</div>
     <div class=”nav-item” onclick=”switchTab('banked',this)” id=”nav-banked”>
       <svg viewBox=”0 0 24 24”><rect x=”3” y=”3” width=”7” height=”7” rx=”1”/><rect x=”14” y=”3” width=”7” height=”7” rx=”1”/><rect x=”3” y=”14” width=”7” height=”7” rx=”1”/><rect x=”14” y=”14” width=”7” height=”7” rx=”1”/></svg>
       Customer Banks
@@ -769,23 +759,7 @@ function render() {
   if (currentTab==='outstanding') a.innerHTML = renderOutstanding();
   else if (currentTab==='incoming') a.innerHTML = renderIncoming();
   else if (currentTab==='banked') { if(drillCustomer) a.innerHTML=renderDrill(drillCustomer); else a.innerHTML=renderBanked(); }
-  else if (currentTab==='warranty') a.innerHTML = renderWarranty();
-  else if (currentTab==='holdlog') a.innerHTML = renderHoldLog();
   else a.innerHTML = renderCVIS();
-}
-
-function renderWarranty() {
-  return `<div style="padding:40px 32px">
-    <div class="content-title">Outstanding Warranty Cores <span class="content-title-badge">Coming Soon</span></div>
-    <div class="empty" style="margin-top:48px;"><div class="empty-icon">🛡️</div><div class="empty-text">This section is under construction.</div></div>
-  </div>`;
-}
-
-function renderHoldLog() {
-  return `<div style="padding:40px 32px">
-    <div class="content-title">CVIS Hold Log Entry <span class="content-title-badge">Coming Soon</span></div>
-    <div class="empty" style="margin-top:48px;"><div class="empty-icon">📋</div><div class="empty-text">This section is under construction.</div></div>
-  </div>`;
 }
 
 function renderOutstanding() {
