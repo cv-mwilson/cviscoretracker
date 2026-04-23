@@ -604,6 +604,10 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
       Cores from Pending Orders
       <span class="nav-count" id="nav-count-incoming">—</span>
     </div>
+    <div class="nav-item" onclick="switchTab('binpickups',this)" id="nav-binpickups">
+      <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      Core Bin Pickups
+    </div>
     <div class="nav-item" onclick="switchTab('banked',this)" id="nav-banked">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Customer Banks
@@ -761,6 +765,7 @@ function render() {
   const a = document.getElementById('main-area');
   if (currentTab==='outstanding') a.innerHTML = renderOutstanding();
   else if (currentTab==='incoming') a.innerHTML = renderIncoming();
+  else if (currentTab==='binpickups') a.innerHTML = renderCoreBinPickups();
   else if (currentTab==='banked') { if(drillCustomer) a.innerHTML=renderDrill(drillCustomer); else a.innerHTML=renderBanked(); }
   else a.innerHTML = renderCVIS();
   if (wasSearching) { const si=a.querySelector('.search-input'); if(si){const v=si.value.length;si.focus();si.setSelectionRange(v,v);} }
@@ -804,6 +809,60 @@ function renderOutstanding() {
       </tr></thead>
       <tbody>
         ${rows.length===0?`<tr><td colspan=”7”><div class=”empty”><div class=”empty-icon”>ðŸ”¦</div><div class="empty-text">No results</div></div></td></tr>`:
+        rows.map(c=>{
+          return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
+            <td><span class="badge badge-blue">${c.so}</span></td>
+            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">—</span>'}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
+            <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
+            <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
+            <td class="mono" style="font-weight:500">${fc(c.fee)}</td>
+            <td><button class="action-btn" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">Log receipt</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderCoreBinPickups() {
+  const tf=OUTSTANDING.reduce((a,c)=>a+c.fee,0);
+  const noP=OUTSTANDING.filter(c=>!c.lastPickup).length;
+  const custs=[...new Set(OUTSTANDING.map(c=>c.customer))].sort();
+  let rows=OUTSTANDING.filter(c=>{
+    const q=outSearch.toLowerCase();
+    if(q&&!(c.customer+c.model+c.so).toLowerCase().includes(q))return false;
+    if(outFilter==='nopickup'&&c.lastPickup)return false;
+    if(outFilter!=='all'&&outFilter!=='nopickup'&&c.customer!==outFilter)return false;
+    return true;
+  });
+  return `<div class="content-header">
+    <div class="content-title">Core Bin Pickups <span class="content-title-badge">Open Invoices</span></div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-lbl">Total outstanding</div><div class="metric-val">${OUTSTANDING.length}</div></div>
+      <div class="metric-card blue"><div class="metric-lbl">Fees held</div><div class="metric-val accent" style="font-size:20px">${fc(tf)}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Customers</div><div class="metric-val">${custs.length}</div></div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" type="search" placeholder="Search SO, customer, modelâ€¦" value="${outSearch}" oninput="outSearch=this.value;render()">
+    </div>
+    <button class="chip ${outFilter==='all'?'active':''}" onclick="outFilter='all';render()">All</button>
+    <button class="chip ${outFilter==='nopickup'?'active':''}" onclick="outFilter='nopickup';render()">No pickup (${noP})</button>
+    <select class="select-filter" onchange="outFilter=this.value;render()">
+      <option value="all">All customers</option>
+      ${custs.map(c=>`<option value="${c}" ${outFilter===c?'selected':''}>${c}</option>`).join('')}
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Invoice #</th><th>Created From</th><th>Customer</th><th>Qty</th><th>Model</th><th>Core fee</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${rows.length===0?`<tr><td colspan="7"><div class="empty"><div class="empty-icon">ðŸ"¦</div><div class="empty-text">No results</div></div></td></tr>`:
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
             <td><span class="badge badge-blue">${c.so}</span></td>
