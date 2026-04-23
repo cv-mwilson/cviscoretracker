@@ -813,7 +813,7 @@ function renderOutstanding() {
         ${rows.length===0?`<tr><td colspan=”7”><div class=”empty”><div class=”empty-icon”>ðŸ”¦</div><div class="empty-text">No results</div></div></td></tr>`:
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
-            <td><span class="badge badge-blue">${c.so}</span></td>
+            <td><span style="background:var(--accent);color:#fff;font-family:var(--head);font-size:13px;font-weight:700;padding:4px 10px;border-radius:var(--rs);white-space:nowrap">${c.so}</span></td>
             <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">-</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
@@ -938,7 +938,7 @@ function renderCoreBinPickups() {
         ${rows.length===0?`<tr><td colspan="7"><div class="empty"><div class="empty-icon">ðŸ"¦</div><div class="empty-text">No results</div></div></td></tr>`:
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
-            <td><span class="badge badge-blue">${c.so}</span></td>
+            <td><span style="background:var(--accent);color:#fff;font-family:var(--head);font-size:13px;font-weight:700;padding:4px 10px;border-radius:var(--rs);white-space:nowrap">${c.so}</span></td>
             <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">-</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
@@ -989,7 +989,7 @@ function renderIncoming() {
         ${rows.length===0?`<tr><td colspan="7"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No results</div></div></td></tr>`:
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'salesorder')">
-            <td><span class="badge badge-blue">${c.so}</span></td>
+            <td><span style="background:var(--accent);color:#fff;font-family:var(--head);font-size:13px;font-weight:700;padding:4px 10px;border-radius:var(--rs);white-space:nowrap">${c.so}</span></td>
             <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">-</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
