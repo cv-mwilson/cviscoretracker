@@ -214,7 +214,8 @@ function(search, record, log) {
         var caseSearch = search.create({
           type: 'supportcase',
           filters: [
-            ['category', 'anyof', '5', '7']
+            ['custevent2',  'anyof',  '1'],
+            'AND', ['category', 'anyof', '4', '6']
           ],
           columns: ['casenumber', 'company', 'quicknote', 'custevent_cv_items', 'internalid']
         });
