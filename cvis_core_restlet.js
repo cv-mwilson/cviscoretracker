@@ -215,7 +215,8 @@ function(search, record, log) {
           type: 'supportcase',
           filters: [
             ['custevent2',  'anyof',  '1'],
-            'AND', ['category', 'anyof', '4', '6']
+            'AND', ['category', 'anyof', '4', '6'],
+            'AND', ['status',   'anyof', '1', '2', '3', '4']
           ],
           columns: ['casenumber', 'company', 'quicknote', 'custevent_cv_items', 'internalid']
         });
