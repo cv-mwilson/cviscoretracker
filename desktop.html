@@ -601,7 +601,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
     </div>
     <div class="nav-item" onclick="switchTab('incoming',this)" id="nav-incoming">
       <svg viewBox="0 0 24 24"><path d="M12 2l0 20M2 12l10 10 10-10"/></svg>
-      Incoming Cores
+      Cores from Pending Orders
       <span class="nav-count" id="nav-count-incoming">—</span>
     </div>
     <div class="nav-item" onclick="switchTab('banked',this)" id="nav-banked">
@@ -684,7 +684,8 @@ async function loadOutstanding() {
         lineNum     : c.lineNum,
         qtyOrdered  : c.qtyOrdered,
         qtyReceived : c.qtyReceived,
-        qtyRemaining: c.qtyRemaining
+        qtyRemaining: c.qtyRemaining,
+        createdFrom : c.createdFrom || ''
       }));
       BANKED = (data.banked || []).map(b => ({
         id         : b.id,
@@ -829,7 +830,7 @@ function renderIncoming() {
     return true;
   });
   return `<div class="content-header">
-    <div class="content-title">Incoming Cores <span class="content-title-badge">Open Sales Orders</span></div>
+    <div class="content-title">Cores from Pending Orders <span class="content-title-badge">Open Sales Orders</span></div>
     <div class="metrics-row">
       <div class="metric-card"><div class="metric-lbl">Total open</div><div class="metric-val">${INCOMING.length}</div></div>
       <div class="metric-card blue"><div class="metric-lbl">Fees held</div><div class="metric-val accent" style="font-size:20px">${fc(tf)}</div></div>
@@ -850,21 +851,18 @@ function renderIncoming() {
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>Record #</th><th>Sales Order</th><th>Customer</th><th>Model</th>
-        <th>Core fee</th><th>SO Date</th><th>Days Out</th><th></th>
+        <th>SO #</th><th>Created From</th><th>Customer</th><th>Qty</th><th>Model</th><th>Core fee</th><th></th>
       </tr></thead>
       <tbody>
-        ${rows.length===0?`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No results</div></div></td></tr>`:
+        ${rows.length===0?`<tr><td colspan="7"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No results</div></div></td></tr>`:
         rows.map(c=>{
-          const ageBadge=c.daysOut>30?'badge-danger':c.daysOut>14?'badge-warn':'badge-green';
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'salesorder')">
-            <td class="mono" style="color:var(--muted);font-size:12px">${c.soId}</td>
             <td><span class="badge badge-blue">${c.so}</span></td>
+            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">—</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
+            <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
             <td class="mono" style="font-weight:500">${fc(c.fee)}</td>
-            <td style="color:var(--muted);font-size:12px">${fd(c.saleDate)}</td>
-            <td><span class="badge ${ageBadge}">${c.daysOut}d</span></td>
             <td><button class="action-btn" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'salesorder')">Log receipt</button></td>
           </tr>`;
         }).join('')}

@@ -44,6 +44,7 @@ function(search, record, log) {
         filters: [
           ['mainline',          'is',      'F'],
           'AND', ['status',     'anyof',   'CustInvc:A'],
+          'AND', ['item',       'contains', 'CORE CHARGE'],
           'AND', [
             ['custcol3', 'is',      'F'],
             'OR',
@@ -57,14 +58,12 @@ function(search, record, log) {
 
       try {
         soSearch.run().each(function(r) {
-          if ((r.getText('item') || '').toUpperCase().indexOf('CORE CHARGE') === -1) return true;
+          var itemText  = r.getText('item') || '';
           var tranDate  = r.getValue('trandate');
           var daysOut   = daysBetween(tranDate);
           var fee       = parseFloat(r.getValue('rate')) || 0;
           var ci        = creditInfo(daysOut, fee);
           var qty       = parseInt(r.getValue('quantity')) || 1;
-
-          var itemText = r.getText('item') || '';
           results.push({
             soId         : r.getValue('internalid'),
             soNumber     : r.getValue('tranid'),
@@ -104,7 +103,7 @@ function(search, record, log) {
           ],
           columns: [
             'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
-            'custcol3', 'custcol2', 'internalid'
+            'custcol3', 'custcol2', 'internalid', 'createdfrom'
           ]
         });
         soSearch2.run().each(function(r) {
@@ -129,7 +128,8 @@ function(search, record, log) {
             coreReceived : r.getValue('custcol3') === 'T',
             qtyOrdered   : qty,
             qtyReceived  : 0,
-            qtyRemaining : qty
+            qtyRemaining : qty,
+            createdFrom  : r.getText('createdfrom') || ''
           });
           return true;
         });
