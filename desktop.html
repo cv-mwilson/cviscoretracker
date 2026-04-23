@@ -596,7 +596,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
     <div class="nav-section">Views</div>
     <div class="nav-item active" onclick="switchTab('outstanding',this)" id="nav-outstanding">
       <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><path d="M9 12h6M9 16h4"/></svg>
-      Outstanding
+      Cores from Fulfilled Orders
       <span class="nav-count" id="nav-count-outstanding">—</span>
     </div>
     <div class="nav-item" onclick="switchTab('incoming',this)" id="nav-incoming">
@@ -774,7 +774,7 @@ function renderOutstanding() {
     return true;
   });
   return `<div class="content-header">
-    <div class="content-title">Outstanding Cores <span class="content-title-badge">Open Invoices</span></div>
+    <div class="content-title">Cores from Fulfilled Orders <span class="content-title-badge">Open Invoices</span></div>
     <div class="metrics-row">
       <div class="metric-card"><div class="metric-lbl">Total outstanding</div><div class="metric-val">${OUTSTANDING.length}</div></div>
       <div class="metric-card blue"><div class="metric-lbl">Fees held</div><div class="metric-val accent" style="font-size:20px">${fc(tf)}</div></div>
