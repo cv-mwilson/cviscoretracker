@@ -38,8 +38,7 @@ function(search, record, log) {
       var soSearch = search.create({
         type: search.Type.INVOICE,
         filters: [
-          ['mainline',          'is',      'F'],
-          'AND', ['item.class', 'anyof',   '21']
+          ['mainline',          'is',      'F']
         ],
         columns: [
           'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid'
@@ -47,6 +46,7 @@ function(search, record, log) {
       });
 
       try { soSearch.run().each(function(r) {
+        if ((r.getText('item') || '').toUpperCase().indexOf('CORE CHARGE') === -1) return true;
         var tranDate  = r.getValue('trandate');
         var daysOut   = daysBetween(tranDate);
         var fee       = parseFloat(r.getValue('rate')) || 0;
