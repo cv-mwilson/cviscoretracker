@@ -784,7 +784,7 @@ function renderOutstanding() {
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search-input" type="search" placeholder="Search SO, customer, modelâ€¦" value="${outSearch}" oninput="outSearch=this.value;render()">
+      <input class="search-input" type="search" placeholder="Search SO, customer, model..." value="${outSearch}" oninput="outSearch=this.value;render()">
     </div>
     <button class="chip ${outFilter==='all'?'active':''}" onclick="outFilter='all';render()">All</button>
     <button class="chip ${outFilter==='nopickup'?'active':''}" onclick="outFilter='nopickup';render()">No pickup (${noP})</button>
@@ -803,7 +803,7 @@ function renderOutstanding() {
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
             <td><span class="badge badge-blue">${c.so}</span></td>
-            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">—</span>'}</td>
+            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">-</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
@@ -839,7 +839,7 @@ function renderCoreBinPickups() {
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search-input" type="search" placeholder="Search SO, customer, modelâ€¦" value="${outSearch}" oninput="outSearch=this.value;render()">
+      <input class="search-input" type="search" placeholder="Search SO, customer, model..." value="${outSearch}" oninput="outSearch=this.value;render()">
     </div>
     <button class="chip ${outFilter==='all'?'active':''}" onclick="outFilter='all';render()">All</button>
     <button class="chip ${outFilter==='nopickup'?'active':''}" onclick="outFilter='nopickup';render()">No pickup (${noP})</button>
@@ -858,7 +858,7 @@ function renderCoreBinPickups() {
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
             <td><span class="badge badge-blue">${c.so}</span></td>
-            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">—</span>'}</td>
+            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">-</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
@@ -891,7 +891,7 @@ function renderIncoming() {
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search-input" type="search" placeholder="Search SO, customer, model…" value="${outSearch}" oninput="outSearch=this.value;render()">
+      <input class="search-input" type="search" placeholder="Search SO, customer, model..." value="${outSearch}" oninput="outSearch=this.value;render()">
     </div>
     <button class="chip ${outFilter==='all'?'active':''}" onclick="outFilter='all';render()">All</button>
     <select class="select-filter" onchange="outFilter=this.value;render()">
@@ -909,7 +909,7 @@ function renderIncoming() {
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'salesorder')">
             <td><span class="badge badge-blue">${c.so}</span></td>
-            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">—</span>'}</td>
+            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">-</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
@@ -1010,7 +1010,7 @@ function renderCVIS() {
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search-input" type="search" placeholder="Search modelâ€¦" value="${cvisSearch}" oninput="cvisSearch=this.value;render()">
+      <input class="search-input" type="search" placeholder="Search model..." value="${cvisSearch}" oninput="cvisSearch=this.value;render()">
     </div>
     <button class="chip ${cvisFilter==='all'?'active':''}" onclick="cvisFilter='all';render()">All</button>
     <button class="chip ${cvisFilter==='highvol'?'active':''}" onclick="cvisFilter='highvol';render()">High velocity</button>
@@ -1087,7 +1087,7 @@ function openReceiveModal(soId, lineNum, so, customer, model, fee, qtyOrdered, q
         </div>
         <div class="form-group">
           <label class="form-label">Notes / condition</label>
-          <input class="form-input" id="m-notes" type="text" placeholder="Any damage, missing parts, special notesâ€¦">
+          <input class="form-input" id="m-notes" type="text" placeholder="Any damage, missing parts, special notes...">
         </div>
         <div class="btn-row">
           <button class="btn-secondary" onclick="closeModal()">Cancel</button>
@@ -1117,7 +1117,7 @@ async function submitReceipt() {
     recordType  : _modal.recordType
   };
   closeModal();
-  showToast('Submitting to NetSuiteâ€¦');
+  showToast('Submitting to NetSuite...');
   try {
     const res    = await fetch('/api/bin-pickup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
     const result = await res.json();
