@@ -819,7 +819,7 @@ function renderOutstanding() {
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
             <td class="mono" style="font-weight:500">${fc(c.fee)}</td>
-            <td><button class="action-btn" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">Log receipt</button></td>
+            <td><button style="background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-family:var(--head);font-size:13px;font-weight:700;padding:7px 14px;cursor:pointer;white-space:nowrap;transition:opacity 0.15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">Log receipt</button></td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -944,7 +944,7 @@ function renderCoreBinPickups() {
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
             <td class="mono" style="font-weight:500">${fc(c.fee)}</td>
-            <td><button class="action-btn" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">Log receipt</button></td>
+            <td><button style="background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-family:var(--head);font-size:13px;font-weight:700;padding:7px 14px;cursor:pointer;white-space:nowrap;transition:opacity 0.15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">Log receipt</button></td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -995,7 +995,7 @@ function renderIncoming() {
             <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
             <td class="mono" style="font-weight:500">${fc(c.fee)}</td>
-            <td><button class="action-btn" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'salesorder')">Log receipt</button></td>
+            <td><button style="background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-family:var(--head);font-size:13px;font-weight:700;padding:7px 14px;cursor:pointer;white-space:nowrap;transition:opacity 0.15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'salesorder')">Log receipt</button></td>
           </tr>`;
         }).join('')}
       </tbody>
