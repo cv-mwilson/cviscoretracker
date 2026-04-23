@@ -44,7 +44,6 @@ function(search, record, log) {
         filters: [
           ['mainline',          'is',      'F'],
           'AND', ['status',     'anyof',   'CustInvc:A'],
-          'AND', ['item',       'contains', 'CORE CHARGE'],
           'AND', [
             ['custcol3', 'is',      'F'],
             'OR',
@@ -58,6 +57,7 @@ function(search, record, log) {
 
       try {
         soSearch.run().each(function(r) {
+          if ((r.getText('item') || '').toUpperCase().indexOf('CORE CHARGE') === -1) return true;
           var itemText  = r.getText('item') || '';
           var tranDate  = r.getValue('trandate');
           var daysOut   = daysBetween(tranDate);
