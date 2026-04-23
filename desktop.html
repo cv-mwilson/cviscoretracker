@@ -890,7 +890,7 @@ function renderWarrantyBin() {
           <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.company}</td>
           <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.items||'-'}</td>
           <td class="mono" style="font-size:12px">${c.serialNum||'-'}</td>
-          <td><button class="action-btn" onclick="moveCaseToWarranty('${c.id}',this)">Move</button></td>
+          <td><button style="background:var(--accent);color:#fff;border:none;border-radius:var(--rs);font-family:var(--head);font-size:13px;font-weight:700;padding:7px 14px;cursor:pointer;white-space:nowrap;transition:opacity 0.15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'" onclick="moveCaseToWarranty('${c.id}',this)">Move to Warranty Bin</button></td>
         </tr>`).join('')}
       </tbody>
     </table>
