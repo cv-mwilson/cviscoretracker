@@ -37,9 +37,7 @@ function(search, record, log) {
 
       var soSearch = search.create({
         type: search.Type.INVOICE,
-        filters: [
-          ['mainline',          'is',      'F']
-        ],
+        filters: [],
         columns: [
           'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid'
         ]
