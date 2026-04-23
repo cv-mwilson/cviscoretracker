@@ -45,32 +45,34 @@ function(search, record, log) {
         ]
       });
 
-      soSearch.run().each(function(r) {
-        if ((r.getText('item') || '').toUpperCase().indexOf('CORE CHARGE') === -1) return true;
-        var tranDate  = r.getValue('trandate');
-        var daysOut   = daysBetween(tranDate);
-        var fee       = parseFloat(r.getValue('rate')) || 0;
-        var ci        = creditInfo(daysOut, fee);
-        var qty       = parseInt(r.getValue('quantity')) || 1;
+      try {
+        soSearch.run().each(function(r) {
+          if ((r.getText('item') || '').toUpperCase().indexOf('CORE CHARGE') === -1) return true;
+          var tranDate  = r.getValue('trandate');
+          var daysOut   = daysBetween(tranDate);
+          var fee       = parseFloat(r.getValue('rate')) || 0;
+          var ci        = creditInfo(daysOut, fee);
+          var qty       = parseInt(r.getValue('quantity')) || 1;
 
-        results.push({
-          soId         : r.getValue('internalid'),
-          soNumber     : r.getValue('tranid'),
-          customer     : r.getText('entity'),
-          saleDate     : tranDate,
-          daysOut      : daysOut,
-          item         : r.getText('item'),
-          coreFee      : fee,
-          creditAmount : ci.amount,
-          creditLabel  : ci.label,
-          lineNum      : r.getValue('line'),
-          coreReceived : false,
-          qtyOrdered   : qty,
-          qtyReceived  : 0,
-          qtyRemaining : qty
+          results.push({
+            soId         : r.getValue('internalid'),
+            soNumber     : r.getValue('tranid'),
+            customer     : r.getText('entity'),
+            saleDate     : tranDate,
+            daysOut      : daysOut,
+            item         : r.getText('item'),
+            coreFee      : fee,
+            creditAmount : ci.amount,
+            creditLabel  : ci.label,
+            lineNum      : r.getValue('line'),
+            coreReceived : false,
+            qtyOrdered   : qty,
+            qtyReceived  : 0,
+            qtyRemaining : qty
+          });
+          return true;
         });
-        return true;
-      });
+      } catch(invErr) { log.error({ title: 'Invoice search error', details: invErr.message }); }
 
       // ── Incoming cores: open Sales Orders with unreceived CORE CHARGE lines ───
       var incomingResults = [];
