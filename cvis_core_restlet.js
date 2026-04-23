@@ -48,8 +48,7 @@ function(search, record, runtime, log, format) {
       var soSearch = search.create({
         type: search.Type.INVOICE,
         filters: [
-          ['mainline',              'is',      'F'],
-          'AND', ['item.name',       'contains', 'CORE CHARGE']
+          ['item.itemid',            'contains', 'CORE CHARGE']
         ],
         columns: [
           'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
