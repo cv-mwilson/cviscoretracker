@@ -773,10 +773,11 @@ function render() {
 }
 
 function renderOutstanding() {
-  const tf=OUTSTANDING.reduce((a,c)=>a+c.fee,0);
-  const noP=OUTSTANDING.filter(c=>!c.lastPickup).length;
-  const custs=[...new Set(OUTSTANDING.map(c=>c.customer))].sort();
-  let rows=OUTSTANDING.filter(c=>{
+  const pool=OUTSTANDING.filter(c=>!c.binPickup);
+  const tf=pool.reduce((a,c)=>a+c.fee,0);
+  const noP=pool.filter(c=>!c.lastPickup).length;
+  const custs=[...new Set(pool.map(c=>c.customer))].sort();
+  let rows=pool.filter(c=>{
     const q=outSearch.toLowerCase();
     if(q&&!(c.customer+c.model+c.so).toLowerCase().includes(q))return false;
     if(outFilter==='nopickup'&&c.lastPickup)return false;
@@ -786,7 +787,7 @@ function renderOutstanding() {
   return `<div class="content-header">
     <div class="content-title">Cores from Fulfilled Orders <span class="content-title-badge">Open Invoices</span></div>
     <div class="metrics-row">
-      <div class="metric-card"><div class="metric-lbl">Total outstanding</div><div class="metric-val">${OUTSTANDING.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Total outstanding</div><div class="metric-val">${pool.length}</div></div>
       <div class="metric-card blue"><div class="metric-lbl">Fees held</div><div class="metric-val accent" style="font-size:20px">${fc(tf)}</div></div>
       <div class="metric-card"><div class="metric-lbl">Customers</div><div class="metric-val">${custs.length}</div></div>
     </div>
