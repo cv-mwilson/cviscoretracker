@@ -8,16 +8,16 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:      #0f1923;
-  --surface: #162130;
-  --card:    #1c2d3f;
+  --bg:      #0f1113;
+  --surface: #181b1e;
+  --card:    #1f2428;
   --border:  rgba(255,255,255,0.08);
-  --accent:  #00d4aa;
-  --accent2: #3b82f6;
+  --accent:  #C8171E;
+  --accent2: #e8403e;
   --warn:    #f59e0b;
   --danger:  #ef4444;
   --text:    #f0f4f8;
-  --muted:   #7a9bb5;
+  --muted:   #8a9aaa;
   --mono:    'DM Mono', monospace;
   --head:    'Syne', sans-serif;
   --body:    'DM Sans', sans-serif;
@@ -83,7 +83,7 @@ body {
 .ns-status:hover { border-color: var(--accent); color: var(--text); }
 .log-btn {
   background: var(--accent);
-  color: #0f1923;
+  color: #ffffff;
   border: none;
   border-radius: var(--rs);
   font-family: var(--head);
@@ -98,7 +98,7 @@ body {
   white-space: nowrap;
 }
 .log-btn:hover { opacity: 0.88; }
-.log-btn svg { width: 14px; height: 14px; stroke: #0f1923; fill: none; stroke-width: 2.5; }
+.log-btn svg { width: 14px; height: 14px; stroke: #ffffff; fill: none; stroke-width: 2.5; }
 
 /* â”€â”€ LAYOUT â”€â”€ */
 .layout {
@@ -571,10 +571,12 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <div>
-    <div class="logo">CVIS <span>Core Tracker</span></div>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div style="background:#fff;border-radius:6px;padding:3px 10px;display:flex;align-items:center;">
+      <img src="/Images/RGB_Primary Logo.jpg" height="30" alt="Cardinal Valley Industrial Supply" style="display:block;">
+    </div>
+    <div class="logo-sub">Core Tracker</div>
   </div>
-  <div class="logo-sub">Cardinal Valley Industrial Supply</div>
   <div class="topbar-spacer"></div>
   <button id="refresh-btn" onclick="refreshData()" title="Refresh data" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;padding:7px 14px;color:inherit;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;">
     <svg id="refresh-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
