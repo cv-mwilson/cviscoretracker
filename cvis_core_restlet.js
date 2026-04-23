@@ -5,7 +5,7 @@
  *
  * Workflows:
  *   "bin_pickup" — Core collected from customer's bin, physically arriving at CVIS shop.
- *                  Marks SO/Invoice/Quote received, flips Core Bank status to Applied.
+ *                  Marks Invoice/SO received, flips Core Bank status to Applied.
  *                  Credit memo handled separately by auto_core_credit.js.
  *
  *   "bank_draw"  — Core already at CVIS (right container), being pulled for a new sales order.
@@ -15,8 +15,8 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(['N/search', 'N/record', 'N/runtime', 'N/log', 'N/format'],
-function(search, record, runtime, log, format) {
+define(['N/search', 'N/record', 'N/log'],
+function(search, record, log) {
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
   function daysBetween(dateStr) {
@@ -30,17 +30,7 @@ function(search, record, runtime, log, format) {
     else               return { pct: 50,  amount: fee * 0.5,  label: '50% credit (past 30 days)'    };
   }
 
-  function fmtCurr(n) {
-    return '$' + parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  }
-
-  function fmtDate(d) {
-    if (!d) return 'N/A';
-    const dt = (d instanceof Date) ? d : new Date(d);
-    return dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  }
-
-  // ─── GET: Pull outstanding core charge lines from open Sales Orders ─────────
+  // ─── GET: Pull outstanding core charge lines ────────────────────────────────
   function doGet(params) {
     try {
       var results = [];
@@ -62,9 +52,7 @@ function(search, record, runtime, log, format) {
         var daysOut   = daysBetween(tranDate);
         var fee       = parseFloat(r.getValue('rate')) || 0;
         var ci        = creditInfo(daysOut, fee);
-
-        var qtyOrdered   = parseInt(r.getValue('quantity')) || 1;
-        var qtyRemaining = qtyOrdered;
+        var qty       = parseInt(r.getValue('quantity')) || 1;
 
         results.push({
           soId         : r.getValue('internalid'),
@@ -73,16 +61,14 @@ function(search, record, runtime, log, format) {
           saleDate     : tranDate,
           daysOut      : daysOut,
           item         : r.getText('item'),
-          starterModel : '',
-          serialNumber : '',
           coreFee      : fee,
           creditAmount : ci.amount,
           creditLabel  : ci.label,
           lineNum      : r.getValue('line'),
           coreReceived : false,
-          qtyOrdered   : qtyOrdered,
+          qtyOrdered   : qty,
           qtyReceived  : 0,
-          qtyRemaining : qtyRemaining
+          qtyRemaining : qty
         });
         return true;
       });
@@ -94,7 +80,7 @@ function(search, record, runtime, log, format) {
           type: search.Type.SALES_ORDER,
           filters: [
             ['mainline',              'is',      'F'],
-            'AND', ['item.name',       'contains', 'CORE CHARGE'],
+            'AND', ['item.name',      'contains', 'CORE CHARGE'],
             'AND', ['status',         'anyof',   'SalesOrd:B','SalesOrd:D','SalesOrd:E','SalesOrd:F'],
             'AND', [
               ['custcol3', 'is',      'F'],
@@ -108,12 +94,11 @@ function(search, record, runtime, log, format) {
           ]
         });
         soSearch2.run().each(function(r) {
-          var tranDate  = r.getValue('trandate');
-          var daysOut   = daysBetween(tranDate);
-          var fee       = parseFloat(r.getValue('rate')) || 0;
-          var ci        = creditInfo(daysOut, fee);
-          var qtyOrdered   = parseInt(r.getValue('quantity')) || 1;
-          var qtyRemaining = qtyOrdered;
+          var tranDate = r.getValue('trandate');
+          var daysOut  = daysBetween(tranDate);
+          var fee      = parseFloat(r.getValue('rate')) || 0;
+          var ci       = creditInfo(daysOut, fee);
+          var qty      = parseInt(r.getValue('quantity')) || 1;
           incomingResults.push({
             soId         : r.getValue('internalid'),
             soNumber     : r.getValue('tranid'),
@@ -121,16 +106,14 @@ function(search, record, runtime, log, format) {
             saleDate     : tranDate,
             daysOut      : daysOut,
             item         : r.getText('item'),
-            starterModel : '',
-            serialNumber : '',
             coreFee      : fee,
             creditAmount : ci.amount,
             creditLabel  : ci.label,
             lineNum      : r.getValue('line'),
             coreReceived : r.getValue('custcol3') === 'T',
-            qtyOrdered   : qtyOrdered,
+            qtyOrdered   : qty,
             qtyReceived  : 0,
-            qtyRemaining : qtyRemaining
+            qtyRemaining : qty
           });
           return true;
         });
@@ -144,7 +127,7 @@ function(search, record, runtime, log, format) {
         var bankSearch = search.create({
           type: 'customrecord1532',
           filters: [
-            ['custrecord174', 'isempty', ''] // Applied Sales Order is empty = still available
+            ['custrecord174', 'isempty', '']
           ],
           columns: [
             'internalid',
@@ -186,23 +169,11 @@ function(search, record, runtime, log, format) {
   // ─── POST: Process a core receipt ──────────────────────────────────────────
   function doPost(body) {
     try {
-      var workflow     = body.workflow || 'bin_pickup'; // 'bin_pickup' | 'bank_draw'
-      var soId         = body.soId;
-      var lineNum      = body.lineNum;
-      var serialNum    = body.serialNumber    || '';
-      var destination  = body.destination    || 'MASCO';
-      var receivedBy   = body.receivedBy     || '';
-      var coreFee      = parseFloat(body.coreFee)     || 0;
-      var creditAmount = parseFloat(body.creditAmount) || 0;
-      var creditLabel  = body.creditLabel    || '';
-      var daysOut      = parseInt(body.daysOut)        || 0;
-      var saleDate     = body.saleDate       || '';
-      var customer     = body.customer       || '';
-      var starterModel = body.starterModel   || '';
-      var soNumber     = body.soNumber       || '';
-
-      // Core Bank record fields (from customer Core Bank tab)
-      var coreBankRecordId = body.coreBankRecordId || null; // internal ID of the Starter Core record
+      var workflow         = body.workflow || 'bin_pickup';
+      var soId             = body.soId;
+      var lineNum          = body.lineNum;
+      var soNumber         = body.soNumber       || '';
+      var coreBankRecordId = body.coreBankRecordId || null;
 
       if (!soId) return { success: false, error: 'soId is required' };
 
@@ -210,11 +181,7 @@ function(search, record, runtime, log, format) {
 
       // ── 1. Mark the transaction line as Core Received ─────────────────────
       var recType = body.recordType === 'invoice' ? record.Type.INVOICE : record.Type.SALES_ORDER;
-      var soRec = record.load({
-        type: recType,
-        id: soId,
-        isDynamic: true
-      });
+      var soRec = record.load({ type: recType, id: soId, isDynamic: true });
 
       var lineCount = soRec.getLineCount({ sublistId: 'item' });
       var lineFound = false;
@@ -223,150 +190,31 @@ function(search, record, runtime, log, format) {
         var ln = soRec.getSublistValue({ sublistId: 'item', fieldId: 'line', line: i });
         if (String(ln) === String(lineNum)) {
           soRec.selectLine({ sublistId: 'item', line: i });
-
-          // Increment qty_received by 1
-          var currentQtyReceived = parseInt(soRec.getCurrentSublistValue({
-            sublistId: 'item', fieldId: 'custcol_core_qty_received'
-          })) || 0;
-          var currentQtyOrdered = parseInt(soRec.getCurrentSublistValue({
-            sublistId: 'item', fieldId: 'custcol_core_qty_ordered'
-          })) || parseInt(soRec.getCurrentSublistValue({
-            sublistId: 'item', fieldId: 'quantity'
-          })) || 1;
-
-          var newQtyReceived = currentQtyReceived + 1;
-          var allReceived    = newQtyReceived >= currentQtyOrdered;
-
-          soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_core_qty_received',  value: newQtyReceived });
-          soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_core_destination',    value: destination   });
-
-          // Only mark fully received when all cores are in
-          if (allReceived) {
-            soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol3',  value: true      });
-            soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol2',  value: new Date() });
-          }
-
-          if (serialNum) {
-            // Append serial to existing serials (comma separated) so we track all of them
-            var existingSerials = soRec.getCurrentSublistValue({
-              sublistId: 'item', fieldId: 'custcol_serial_number'
-            }) || '';
-            var updatedSerials = existingSerials
-              ? existingSerials + ', ' + serialNum
-              : serialNum;
-            soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_serial_number', value: updatedSerials });
-          }
-
+          soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol3', value: true      });
+          soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol2', value: new Date() });
           soRec.commitLine({ sublistId: 'item' });
           lineFound = true;
-
-          // Pass qty info back for response
-          body._qtyOrdered   = currentQtyOrdered;
-          body._qtyReceived  = newQtyReceived;
-          body._qtyRemaining = Math.max(0, currentQtyOrdered - newQtyReceived);
-          body._allReceived  = allReceived;
           break;
         }
       }
 
       if (!lineFound) {
-        return { success: false, error: 'Could not find matching line ' + lineNum + ' on SO ' + soId };
+        return { success: false, error: 'Could not find matching line ' + lineNum + ' on record ' + soId };
       }
 
-      var savedSoId = soRec.save({ enableSourcing: true, ignoreMandatoryFields: true });
+      soRec.save({ enableSourcing: true, ignoreMandatoryFields: true });
       results.soUpdated = true;
-      results.soId = savedSoId;
-      log.audit({ title: 'SO core received stamped', details: soNumber + ' | ' + destination });
+      log.audit({ title: 'Core received stamped', details: soNumber });
 
-      // ── 2 & 3. Stamp linked Invoice / Quote (Sales Order workflow only) ───────
-      if (body.recordType !== 'invoice') {
-
-      // ── 2. Mark linked Invoice as Core Received ────────────────────────────
-      var invoiceId = null;
-      try {
-        var invSearch = search.create({
-          type: search.Type.INVOICE,
-          filters: [
-            ['createdfrom', 'anyof', soId],
-            'AND', ['mainline', 'is', 'T']
-          ],
-          columns: ['internalid', 'tranid']
-        });
-        var invResults = invSearch.run().getRange({ start: 0, end: 1 });
-        if (invResults.length > 0) {
-          invoiceId = invResults[0].getValue('internalid');
-          var invNumber = invResults[0].getValue('tranid');
-
-          // Stamp core received on invoice header custom field if it exists
-          try {
-            record.submitFields({
-              type: record.Type.INVOICE,
-              id: invoiceId,
-              values: {
-                custbody_core_received      : true,
-                custbody_core_received_date : new Date()
-              },
-              options: { enableSourcing: true, ignoreMandatoryFields: true }
-            });
-            results.invoiceUpdated = true;
-            results.invoiceId = invoiceId;
-            log.audit({ title: 'Invoice core received stamped', details: invNumber });
-          } catch (invFieldErr) {
-            // Custom fields may not exist on Invoice — non-fatal
-            log.error({ title: 'Invoice field stamp skipped', details: invFieldErr.message });
-            results.invoiceUpdated = false;
-            results.invoiceNote = 'Custom fields not found on Invoice — stamp skipped';
-          }
-        }
-      } catch (invErr) {
-        log.error({ title: 'Invoice lookup error', details: invErr.message });
-        results.invoiceUpdated = false;
-      }
-
-      // ── 3. Mark linked Quote as Core Received (if applicable) ──────────────
-      try {
-        var quoteSearch = search.create({
-          type: search.Type.ESTIMATE,
-          filters: [
-            ['createdfrom', 'anyof', soId],
-            'AND', ['mainline', 'is', 'T']
-          ],
-          columns: ['internalid', 'tranid']
-        });
-        var quoteResults = quoteSearch.run().getRange({ start: 0, end: 1 });
-        if (quoteResults.length > 0) {
-          var quoteId     = quoteResults[0].getValue('internalid');
-          var quoteNumber = quoteResults[0].getValue('tranid');
-          try {
-            record.submitFields({
-              type: record.Type.ESTIMATE,
-              id: quoteId,
-              values: { custbody_core_received: true, custbody_core_received_date: new Date() },
-              options: { enableSourcing: true, ignoreMandatoryFields: true }
-            });
-            results.quoteUpdated = true;
-            results.quoteId = quoteId;
-            log.audit({ title: 'Quote core received stamped', details: quoteNumber });
-          } catch (qFieldErr) {
-            results.quoteUpdated = false;
-          }
-        }
-      } catch (qErr) {
-        log.error({ title: 'Quote lookup error', details: qErr.message });
-        results.quoteUpdated = false;
-      }
-
-      } // end SO-only steps 2 & 3
-
-      // ── 4. Flip Core Bank record status to "Applied" ───────────────────────
+      // ── 2. Flip Core Bank record status to "Applied" ───────────────────────
       if (coreBankRecordId) {
         try {
           record.submitFields({
             type: 'customrecord1532',
             id: coreBankRecordId,
             values: {
-              custrecord171 : 'Applied',  // Status
-              custrecord174 : soId        // Applied Sales Order
+              custrecord171 : 'Applied',
+              custrecord174 : soId
             },
             options: { enableSourcing: true, ignoreMandatoryFields: true }
           });
@@ -383,7 +231,7 @@ function(search, record, runtime, log, format) {
         success  : true,
         workflow : workflow,
         results  : results,
-        message  : buildSuccessMessage(workflow, results)
+        message  : buildSuccessMessage(results)
       };
 
     } catch (e) {
@@ -392,13 +240,11 @@ function(search, record, runtime, log, format) {
     }
   }
 
-  function buildSuccessMessage(workflow, results) {
+  function buildSuccessMessage(results) {
     var parts = [];
-    if (results.soUpdated)        parts.push('Sales Order marked Core Received');
-    if (results.invoiceUpdated)   parts.push('Invoice stamped');
-    if (results.quoteUpdated)     parts.push('Quote stamped');
-    if (results.coreBankUpdated)  parts.push('Core Bank record set to Applied');
-    return parts.join(' \u2022 ');
+    if (results.soUpdated)       parts.push('Core marked as received');
+    if (results.coreBankUpdated) parts.push('Core Bank record set to Applied');
+    return parts.join(' • ');
   }
 
   return { get: doGet, post: doPost };
