@@ -45,7 +45,7 @@ function(search, record, log) {
         ]
       });
 
-      try { soSearch.run().each(function(r) {
+      soSearch.run().each(function(r) {
         if ((r.getText('item') || '').toUpperCase().indexOf('CORE CHARGE') === -1) return true;
         var tranDate  = r.getValue('trandate');
         var daysOut   = daysBetween(tranDate);
@@ -70,7 +70,7 @@ function(search, record, log) {
           qtyRemaining : qty
         });
         return true;
-      }); } catch(invErr) { log.error({ title: 'Invoice search error', details: invErr.message }); results._invoiceError = invErr.message; }
+      });
 
       // ── Incoming cores: open Sales Orders with unreceived CORE CHARGE lines ───
       var incomingResults = [];
