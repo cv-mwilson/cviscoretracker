@@ -48,11 +48,12 @@ function(search, record, runtime, log, format) {
       var soSearch = search.create({
         type: search.Type.INVOICE,
         filters: [],
-        columns: [
-          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
-          'custcol3', 'internalid'
-        ]
+        columns: ['internalid', 'tranid']
       });
+
+      var debugRange = soSearch.run().getRange({ start: 0, end: 5 });
+      log.audit({ title: 'DEBUG invoice search count', details: 'found ' + debugRange.length + ' records' });
+      results._debug = 'invoice search returned ' + debugRange.length + ' raw rows';
 
       soSearch.run().each(function(r) {
         var tranDate  = r.getValue('trandate');
