@@ -82,7 +82,8 @@ function(search, record, log) {
             qtyReceived  : 0,
             qtyRemaining : qty,
             createdFrom  : r.getText('createdfrom') || '',
-            binPickup    : r.getValue({ name: 'custbody75', join: 'createdFrom' }) === 'T'
+            binPickup    : r.getValue({ name: 'custbody75', join: 'createdFrom' }) === 'T',
+            _bp_raw      : r.getValue({ name: 'custbody75', join: 'createdFrom' })
           });
           return true;
         });
