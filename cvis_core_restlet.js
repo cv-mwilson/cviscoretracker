@@ -51,11 +51,11 @@ function(search, record, log) {
           ]
         ],
         columns: [
-          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid', 'createdfrom',
-          search.createColumn({ name: 'custbody75', join: 'createdFrom' })
+          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid', 'createdfrom'
         ]
       });
 
+      var createdFromIds = [];
       try {
         soSearch.run().each(function(r) {
           if ((r.getText('item') || '').toUpperCase().indexOf('CORE CHARGE') === -1) return true;
@@ -65,6 +65,8 @@ function(search, record, log) {
           var fee       = parseFloat(r.getValue('rate')) || 0;
           var ci        = creditInfo(daysOut, fee);
           var qty       = parseInt(r.getValue('quantity')) || 1;
+          var cfId      = r.getValue('createdfrom') || '';
+          if (cfId) createdFromIds.push(cfId);
           results.push({
             soId         : r.getValue('internalid'),
             soNumber     : r.getValue('tranid'),
@@ -82,12 +84,40 @@ function(search, record, log) {
             qtyReceived  : 0,
             qtyRemaining : qty,
             createdFrom  : r.getText('createdfrom') || '',
-            binPickup    : r.getValue({ name: 'custbody75', join: 'createdFrom' }) === 'T',
-            _bp_raw      : r.getValue({ name: 'custbody75', join: 'createdFrom' })
+            _createdFromId: cfId,
+            binPickup    : false
           });
           return true;
         });
       } catch(invErr) { log.error({ title: 'Invoice search error', details: invErr.message }); }
+
+      // ── Look up custbody75 on the linked Sales Orders ─────────────────────────
+      if (createdFromIds.length > 0) {
+        try {
+          var binSet = {};
+          search.create({
+            type: search.Type.SALES_ORDER,
+            filters: [
+              ['internalid', 'anyof', createdFromIds],
+              'AND', ['custbody75', 'is', 'T'],
+              'AND', ['mainline', 'is', 'T']
+            ],
+            columns: ['internalid']
+          }).run().each(function(r2) {
+            binSet[r2.getValue('internalid')] = true;
+            return true;
+          });
+          results.forEach(function(res) {
+            if (res._createdFromId && binSet[res._createdFromId]) res.binPickup = true;
+            delete res._createdFromId;
+          });
+        } catch(binErr) {
+          log.error({ title: 'Bin pickup SO lookup error', details: binErr.message });
+          results.forEach(function(res) { delete res._createdFromId; });
+        }
+      } else {
+        results.forEach(function(res) { delete res._createdFromId; });
+      }
 
       // ── Incoming cores: open Sales Orders with unreceived CORE CHARGE lines ───
       var incomingResults = [];
