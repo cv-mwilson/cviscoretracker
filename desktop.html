@@ -667,6 +667,7 @@ async function loadOutstanding() {
         qtyOrdered  : c.qtyOrdered,
         qtyReceived : c.qtyReceived,
         qtyRemaining: c.qtyRemaining,
+        createdFrom : c.createdFrom || '',
         lastPickup  : null
       }));
       INCOMING = (data.incoming || []).map(c => ({
@@ -798,14 +799,16 @@ function renderOutstanding() {
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>Invoice #</th><th>Customer</th><th>Model</th><th>Core fee</th><th></th>
+        <th>Invoice #</th><th>Created From</th><th>Customer</th><th>Qty</th><th>Model</th><th>Core fee</th><th></th>
       </tr></thead>
       <tbody>
-        ${rows.length===0?`<tr><td colspan=”5”><div class=”empty”><div class=”empty-icon”>ðŸ”¦</div><div class="empty-text">No results</div></div></td></tr>`:
+        ${rows.length===0?`<tr><td colspan=”7”><div class=”empty”><div class=”empty-icon”>ðŸ”¦</div><div class="empty-text">No results</div></div></td></tr>`:
         rows.map(c=>{
           return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
             <td><span class="badge badge-blue">${c.so}</span></td>
+            <td class="mono" style="font-size:12px">${c.createdFrom||'<span style="color:var(--muted)">—</span>'}</td>
             <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
+            <td class="mono" style="text-align:center">${c.qtyOrdered||1}</td>
             <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
             <td class="mono" style="font-weight:500">${fc(c.fee)}</td>
             <td><button class="action-btn" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">Log receipt</button></td>
