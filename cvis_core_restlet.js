@@ -169,7 +169,7 @@ function(search, record, runtime, log, format) {
             id          : r.getValue('internalid'),
             customer    : r.getText('custrecord193') || r.getValue('custrecord193') || '',
             corp        : r.getText('custrecord175') || r.getValue('custrecord175') || '',
-            model       : r.getValue('custrecord168') || '',
+            model       : r.getText('custrecord168') || r.getValue('custrecord168') || '',
             serial      : r.getValue('custrecord169') || '',
             dateCreated : r.getValue('custrecord170') || '',
             status      : r.getText('custrecord171')  || r.getValue('custrecord171') || '',
