@@ -755,11 +755,13 @@ function switchTab(tab, el) {
 }
 
 function render() {
+  const wasSearching = document.activeElement && document.activeElement.classList.contains('search-input');
   const a = document.getElementById('main-area');
   if (currentTab==='outstanding') a.innerHTML = renderOutstanding();
   else if (currentTab==='incoming') a.innerHTML = renderIncoming();
   else if (currentTab==='banked') { if(drillCustomer) a.innerHTML=renderDrill(drillCustomer); else a.innerHTML=renderBanked(); }
   else a.innerHTML = renderCVIS();
+  if (wasSearching) { const si=a.querySelector('.search-input'); if(si){const v=si.value.length;si.focus();si.setSelectionRange(v,v);} }
 }
 
 function renderOutstanding() {
