@@ -209,6 +209,7 @@ function(search, record, log) {
 
       // ── Warranty Bin: Support Cases where custevent2 = 1, category = Warranty/Root Cause ──
       var warrantyBin = [];
+      var warrantyErr = null;
       try {
         var caseSearch = search.create({
           type: 'supportcase',
@@ -229,10 +230,11 @@ function(search, record, log) {
           return true;
         });
       } catch(wErr) {
+        warrantyErr = wErr.message;
         log.error({ title: 'Warranty bin search error', details: wErr.message });
       }
 
-      return { success: true, count: results.length, cores: results, incoming: incomingResults, banked: banked, warrantyBin: warrantyBin };
+      return { success: true, count: results.length, cores: results, incoming: incomingResults, banked: banked, warrantyBin: warrantyBin, _warrantyDebug: { count: warrantyBin.length, error: warrantyErr } };
 
     } catch (e) {
       log.error({ title: 'GET Error', details: e });
