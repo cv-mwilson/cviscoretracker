@@ -276,6 +276,22 @@ function(search, record, log) {
       var lineCount = soRec.getLineCount({ sublistId: 'item' });
       var lineFound = false;
 
+      // ── Build note text before save ───────────────────────────────────────
+      var today = new Date();
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var dateStr = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
+      var noteLines = ['Core Receipt Logged - ' + dateStr];
+      if (body.soNumber)     noteLines.push('Reference: ' + body.soNumber);
+      if (body.customer)     noteLines.push('Customer: ' + body.customer);
+      if (body.starterModel) noteLines.push('Model: ' + body.starterModel);
+      if (body.serialNumber) noteLines.push('Serial #: ' + body.serialNumber);
+      if (body.receivedBy)   noteLines.push('Received by: ' + body.receivedBy);
+      if (body.destination)  noteLines.push('Destination: ' + body.destination);
+      if (body.coreFee)      noteLines.push('Core fee: $' + parseFloat(body.coreFee).toFixed(2));
+      if (body.qtyOrdered)   noteLines.push('Qty received: ' + ((body.qtyReceived || 0) + 1) + ' of ' + body.qtyOrdered);
+      if (body.notes)        noteLines.push('Notes: ' + body.notes);
+      var noteText = noteLines.join('\n');
+
       for (var i = 0; i < lineCount; i++) {
         var ln = soRec.getSublistValue({ sublistId: 'item', fieldId: 'line', line: i });
         if (String(ln) === String(lineNum)) {
@@ -292,39 +308,23 @@ function(search, record, log) {
         return { success: false, error: 'Could not find matching line ' + lineNum + ' on record ' + soId };
       }
 
-      soRec.save({ enableSourcing: true, ignoreMandatoryFields: true });
-      results.soUpdated = true;
-      log.audit({ title: 'Core received stamped', details: soNumber });
-
-      // ── 2. Add a note to the transaction record ────────────────────────────
+      // ── 2. Add user note to the transaction (usernotes sublist) ───────────
       try {
-        var today = new Date();
-        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        var dateStr = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
-        var noteLines = ['Core Receipt Logged - ' + dateStr];
-        if (body.soNumber)      noteLines.push('Reference: ' + body.soNumber);
-        if (body.customer)      noteLines.push('Customer: ' + body.customer);
-        if (body.starterModel)  noteLines.push('Model: ' + body.starterModel);
-        if (body.serialNumber)  noteLines.push('Serial #: ' + body.serialNumber);
-        if (body.receivedBy)    noteLines.push('Received by: ' + body.receivedBy);
-        if (body.destination)   noteLines.push('Destination: ' + body.destination);
-        if (body.coreFee)       noteLines.push('Core fee: $' + parseFloat(body.coreFee).toFixed(2));
-        if (body.qtyOrdered)    noteLines.push('Qty received: ' + ((body.qtyReceived || 0) + 1) + ' of ' + body.qtyOrdered);
-        if (body.notes)         noteLines.push('Notes: ' + body.notes);
-        var noteText = noteLines.join('\n');
-        var noteRec = record.create({ type: 'note' });
-        noteRec.setValue({ fieldId: 'transaction', value: soId });
-        noteRec.setValue({ fieldId: 'title', value: 'Core Receipt Logged' });
-        noteRec.setValue({ fieldId: 'note', value: noteText });
-        noteRec.setValue({ fieldId: 'notedate', value: today });
-        noteRec.save();
+        soRec.selectNewLine({ sublistId: 'usernotes' });
+        soRec.setCurrentSublistValue({ sublistId: 'usernotes', fieldId: 'title',    value: 'Core Receipt Logged' });
+        soRec.setCurrentSublistValue({ sublistId: 'usernotes', fieldId: 'note',     value: noteText });
+        soRec.setCurrentSublistValue({ sublistId: 'usernotes', fieldId: 'notedate', value: today });
+        soRec.commitLine({ sublistId: 'usernotes' });
         results.noteAdded = true;
-        log.audit({ title: 'Note added to transaction', details: soId });
       } catch (noteErr) {
         log.error({ title: 'Note creation error', details: noteErr.message });
         results.noteAdded = false;
         results.noteError = noteErr.message;
       }
+
+      soRec.save({ enableSourcing: true, ignoreMandatoryFields: true });
+      results.soUpdated = true;
+      log.audit({ title: 'Core received + note saved', details: soNumber });
 
       // ── 4. Flip Core Bank record status to "Applied" ───────────────────────
       if (coreBankRecordId) {
