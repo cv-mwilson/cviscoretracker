@@ -36,8 +36,8 @@ function(search, record, log) {
       var results = [];
 
       var soSearch = search.create({
-        type: search.Type.INVOICE,
-        filters: [],
+        type: search.Type.TRANSACTION,
+        filters: [['type', 'anyof', 'CustInvc']],
         columns: [
           'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid'
         ]
