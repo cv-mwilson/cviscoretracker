@@ -481,6 +481,7 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
   animation: modalIn 0.2s ease;
 }
 @keyframes modalIn { from { opacity:0; transform: scale(0.96) translateY(8px); } to { opacity:1; transform: none; } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .modal-title { font-family: var(--head); font-size: 18px; font-weight: 700; margin-bottom: 20px; }
 .form-group { margin-bottom: 14px; }
 .form-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 6px; }
@@ -575,12 +576,10 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
   </div>
   <div class="logo-sub">Cardinal Valley Industrial Supply</div>
   <div class="topbar-spacer"></div>
-  <div class="ns-status">
-    <span id="ns-label">NetSuite: Not connected</span>
-    <button onclick="checkNetSuiteStatus()" title="Refresh connection" style="background:none;border:none;cursor:pointer;padding:4px;color:inherit;display:flex;align-items:center;">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-    </button>
-  </div>
+  <button id="refresh-btn" onclick="refreshData()" title="Refresh data" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;padding:7px 14px;color:inherit;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;">
+    <svg id="refresh-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    Refresh
+  </button>
   <button class="log-btn" onclick="openReceiveModal()">
     <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
     Log receipt
@@ -1095,16 +1094,15 @@ function showToast(msg) {
 
 loadOutstanding();
 
-async function checkNetSuiteStatus() {
-  try {
-    const res = await fetch('/api/health');
-    const { connected } = await res.json();
-    document.getElementById('ns-label').textContent = connected ? 'NetSuite: Connected' : 'NetSuite: Not connected';
-  } catch {
-    // leave default "Not connected" state
-  }
+async function refreshData() {
+  const btn  = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  btn.disabled = true;
+  icon.style.animation = 'spin 0.8s linear infinite';
+  await loadOutstanding();
+  icon.style.animation = '';
+  btn.disabled = false;
 }
-checkNetSuiteStatus();
 </script>
 </body>
 </html>
