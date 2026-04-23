@@ -59,9 +59,7 @@ function(search, record, runtime, log, format) {
         ],
         columns: [
           'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
-          'custcol3', 'custcol_core_received_date',
-          'custcol_core_qty_ordered', 'custcol_core_qty_received',
-          'custcol_starter_model', 'custcol_serial_number', 'internalid'
+          'custcol3', 'internalid'
         ]
       });
 
@@ -71,30 +69,26 @@ function(search, record, runtime, log, format) {
         var fee       = parseFloat(r.getValue('rate')) || 0;
         var ci        = creditInfo(daysOut, fee);
 
-        var qtyOrdered   = parseInt(r.getValue('custcol_core_qty_ordered'))  || parseInt(r.getValue('quantity')) || 1;
-        var qtyReceived  = parseInt(r.getValue('custcol_core_qty_received')) || 0;
-        var qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
-
-        // Only include lines that still have cores outstanding
-        if (qtyRemaining <= 0) return true; // skip fully received lines
+        var qtyOrdered   = parseInt(r.getValue('quantity')) || 1;
+        var qtyRemaining = qtyOrdered;
 
         results.push({
-          soId          : r.getValue('internalid'),
-          soNumber      : r.getValue('tranid'),
-          customer      : r.getText('entity'),
-          saleDate      : tranDate,
-          daysOut       : daysOut,
-          item          : r.getText('item'),
-          starterModel  : r.getValue('custcol_starter_model'),
-          serialNumber  : r.getValue('custcol_serial_number'),
-          coreFee       : fee,
-          creditAmount  : ci.amount,
-          creditLabel   : ci.label,
-          lineNum       : r.getValue('line'),
-          coreReceived  : r.getValue('custcol3') === 'T',
-          qtyOrdered    : qtyOrdered,
-          qtyReceived   : qtyReceived,
-          qtyRemaining  : qtyRemaining
+          soId         : r.getValue('internalid'),
+          soNumber     : r.getValue('tranid'),
+          customer     : r.getText('entity'),
+          saleDate     : tranDate,
+          daysOut      : daysOut,
+          item         : r.getText('item'),
+          starterModel : '',
+          serialNumber : '',
+          coreFee      : fee,
+          creditAmount : ci.amount,
+          creditLabel  : ci.label,
+          lineNum      : r.getValue('line'),
+          coreReceived : false,
+          qtyOrdered   : qtyOrdered,
+          qtyReceived  : 0,
+          qtyRemaining : qtyRemaining
         });
         return true;
       });
@@ -116,7 +110,7 @@ function(search, record, runtime, log, format) {
           ],
           columns: [
             'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
-            'custcol3', 'custcol_core_received_date',
+            'custcol3', 'custcol2',
             'custcol_core_qty_ordered', 'custcol_core_qty_received',
             'custcol_starter_model', 'custcol_serial_number', 'internalid'
           ]
@@ -254,12 +248,12 @@ function(search, record, runtime, log, format) {
           var allReceived    = newQtyReceived >= currentQtyOrdered;
 
           soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_core_qty_received',  value: newQtyReceived });
-          soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_core_received_date',  value: new Date()    });
           soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_core_destination',    value: destination   });
 
           // Only mark fully received when all cores are in
           if (allReceived) {
-            soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol3', value: true });
+            soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol3',  value: true      });
+            soRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol2',  value: new Date() });
           }
 
           if (serialNum) {
