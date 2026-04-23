@@ -226,7 +226,7 @@ function(search, record, log) {
             caseNumber : r.getValue('casenumber'),
             company    : r.getText('company')            || '',
             serialNum  : r.getValue('quicknote')          || '',
-            items      : r.getValue('custevent_cv_items') || ''
+            items      : r.getText('custevent_cv_items') || r.getValue('custevent_cv_items') || ''
           });
           return true;
         });
