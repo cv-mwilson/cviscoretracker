@@ -36,17 +36,23 @@ function(search, record, log) {
       var results = [];
 
       var soSearch = search.create({
-        type: search.Type.TRANSACTION,
-        filters: [['type', 'anyof', 'CustInvc']],
+        type: search.Type.INVOICE,
+        filters: [
+          ['mainline',          'is',      'F'],
+          'AND', ['status',     'anyof',   'CustInvc:A'],
+          'AND', [
+            ['custcol3', 'is',      'F'],
+            'OR',
+            ['custcol3', 'isempty', '']
+          ]
+        ],
         columns: [
           'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid'
         ]
       });
 
-      var invoiceRawCount = 0;
       try {
         soSearch.run().each(function(r) {
-          invoiceRawCount++;
           if ((r.getText('item') || '').toUpperCase().indexOf('CORE CHARGE') === -1) return true;
           var tranDate  = r.getValue('trandate');
           var daysOut   = daysBetween(tranDate);
@@ -72,7 +78,7 @@ function(search, record, log) {
           });
           return true;
         });
-      } catch(invErr) { log.error({ title: 'Invoice search error', details: invErr.message }); invoiceRawCount = -1; }
+      } catch(invErr) { log.error({ title: 'Invoice search error', details: invErr.message }); }
 
       // ── Incoming cores: open Sales Orders with unreceived CORE CHARGE lines ───
       var incomingResults = [];
@@ -159,7 +165,7 @@ function(search, record, log) {
         log.error({ title: 'Banked cores search error', details: bankErr.message });
       }
 
-      return { success: true, count: results.length, cores: results, incoming: incomingResults, banked: banked, _invoiceRawCount: invoiceRawCount };
+      return { success: true, count: results.length, cores: results, incoming: incomingResults, banked: banked };
 
     } catch (e) {
       log.error({ title: 'GET Error', details: e });
