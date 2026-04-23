@@ -47,13 +47,21 @@ function(search, record, runtime, log, format) {
 
       var soSearch = search.create({
         type: search.Type.INVOICE,
-        filters: [],
-        columns: ['internalid', 'tranid']
+        filters: [
+          ['mainline',          'is',      'F'],
+          'AND', ['item.name',  'contains', 'CORE CHARGE'],
+          'AND', ['status',     'anyof',   'CustInvc:A'],
+          'AND', [
+            ['custcol3', 'is',      'F'],
+            'OR',
+            ['custcol3', 'isempty', '']
+          ]
+        ],
+        columns: [
+          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
+          'custcol3', 'internalid'
+        ]
       });
-
-      var debugRange = soSearch.run().getRange({ start: 0, end: 5 });
-      log.audit({ title: 'DEBUG invoice search count', details: 'found ' + debugRange.length + ' records' });
-      results._debug = 'invoice search returned ' + debugRange.length + ' raw rows';
 
       soSearch.run().each(function(r) {
         var tranDate  = r.getValue('trandate');
@@ -102,9 +110,7 @@ function(search, record, runtime, log, format) {
           ],
           columns: [
             'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity',
-            'custcol3', 'custcol2',
-            'custcol_core_qty_ordered', 'custcol_core_qty_received',
-            'custcol_starter_model', 'custcol_serial_number', 'internalid'
+            'custcol3', 'custcol2', 'internalid'
           ]
         });
         soSearch2.run().each(function(r) {
@@ -112,10 +118,8 @@ function(search, record, runtime, log, format) {
           var daysOut   = daysBetween(tranDate);
           var fee       = parseFloat(r.getValue('rate')) || 0;
           var ci        = creditInfo(daysOut, fee);
-          var qtyOrdered   = parseInt(r.getValue('custcol_core_qty_ordered'))  || parseInt(r.getValue('quantity')) || 1;
-          var qtyReceived  = parseInt(r.getValue('custcol_core_qty_received')) || 0;
-          var qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
-          if (qtyRemaining <= 0) return true;
+          var qtyOrdered   = parseInt(r.getValue('quantity')) || 1;
+          var qtyRemaining = qtyOrdered;
           incomingResults.push({
             soId         : r.getValue('internalid'),
             soNumber     : r.getValue('tranid'),
@@ -123,15 +127,15 @@ function(search, record, runtime, log, format) {
             saleDate     : tranDate,
             daysOut      : daysOut,
             item         : r.getText('item'),
-            starterModel : r.getValue('custcol_starter_model'),
-            serialNumber : r.getValue('custcol_serial_number'),
+            starterModel : '',
+            serialNumber : '',
             coreFee      : fee,
             creditAmount : ci.amount,
             creditLabel  : ci.label,
             lineNum      : r.getValue('line'),
             coreReceived : r.getValue('custcol3') === 'T',
             qtyOrdered   : qtyOrdered,
-            qtyReceived  : qtyReceived,
+            qtyReceived  : 0,
             qtyRemaining : qtyRemaining
           });
           return true;
