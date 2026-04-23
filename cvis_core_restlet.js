@@ -51,7 +51,7 @@ function(search, record, log) {
           ]
         ],
         columns: [
-          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid'
+          'tranid', 'entity', 'trandate', 'item', 'rate', 'line', 'quantity', 'internalid', 'createdfrom'
         ]
       });
 
@@ -80,7 +80,8 @@ function(search, record, log) {
             coreReceived : false,
             qtyOrdered   : qty,
             qtyReceived  : 0,
-            qtyRemaining : qty
+            qtyRemaining : qty,
+            createdFrom  : r.getText('createdfrom') || ''
           });
           return true;
         });

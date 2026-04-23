@@ -667,7 +667,7 @@ async function loadOutstanding() {
         qtyOrdered  : c.qtyOrdered,
         qtyReceived : c.qtyReceived,
         qtyRemaining: c.qtyRemaining,
-        lastPickup  : null
+        createdFrom : c.createdFrom || ''
       }));
       INCOMING = (data.incoming || []).map(c => ({
         soId        : c.soId,
@@ -764,58 +764,49 @@ function render() {
 
 function renderOutstanding() {
   const tf=OUTSTANDING.reduce((a,c)=>a+c.fee,0);
-  const noP=OUTSTANDING.filter(c=>!c.lastPickup).length;
   const custs=[...new Set(OUTSTANDING.map(c=>c.customer))].sort();
   let rows=OUTSTANDING.filter(c=>{
     const q=outSearch.toLowerCase();
     if(q&&!(c.customer+c.model+c.so).toLowerCase().includes(q))return false;
-    if(outFilter==='nopickup'&&c.lastPickup)return false;
-    if(outFilter!=='all'&&outFilter!=='nopickup'&&c.customer!==outFilter)return false;
+    if(outFilter!=='all'&&c.customer!==outFilter)return false;
     return true;
   });
-  return `<div class="content-header">
-    <div class="content-title">Cores from Fulfilled Orders <span class="content-title-badge">Open Invoices</span></div>
-    <div class="metrics-row">
-      <div class="metric-card"><div class="metric-lbl">Total outstanding</div><div class="metric-val">${OUTSTANDING.length}</div></div>
-      <div class="metric-card blue"><div class="metric-lbl">Fees held</div><div class="metric-val accent" style="font-size:20px">${fc(tf)}</div></div>
-      <div class="metric-card warn"><div class="metric-lbl">No pickup on record</div><div class="metric-val warn">${noP}</div></div>
-      <div class="metric-card"><div class="metric-lbl">Customers</div><div class="metric-val">${custs.length}</div></div>
+  return `<div class=”content-header”>
+    <div class=”content-title”>Cores from Fulfilled Orders <span class=”content-title-badge”>Open Invoices</span></div>
+    <div class=”metrics-row”>
+      <div class=”metric-card”><div class=”metric-lbl”>Total outstanding</div><div class=”metric-val”>${OUTSTANDING.length}</div></div>
+      <div class=”metric-card blue”><div class=”metric-lbl”>Fees held</div><div class=”metric-val accent” style=”font-size:20px”>${fc(tf)}</div></div>
+      <div class=”metric-card”><div class=”metric-lbl”>Customers</div><div class=”metric-val”>${custs.length}</div></div>
     </div>
   </div>
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="search-input" type="search" placeholder="Search SO, customer, modelâ€¦" value="${outSearch}" oninput="outSearch=this.value;render()">
+  <div class=”toolbar”>
+    <div class=”search-wrap”>
+      <svg class=”search-icon” viewBox=”0 0 24 24”><circle cx=”11” cy=”11” r=”8”/><path d=”m21 21-4.35-4.35”/></svg>
+      <input class=”search-input” type=”search” placeholder=”Search invoice, customer, model…” value=”${outSearch}” oninput=”outSearch=this.value;render()”>
     </div>
-    <button class="chip ${outFilter==='all'?'active':''}" onclick="outFilter='all';render()">All</button>
-    <button class="chip ${outFilter==='nopickup'?'active':''}" onclick="outFilter='nopickup';render()">No pickup (${noP})</button>
-    <select class="select-filter" onchange="outFilter=this.value;render()">
-      <option value="all">All customers</option>
-      ${custs.map(c=>`<option value="${c}" ${outFilter===c?'selected':''}>${c}</option>`).join('')}
+    <button class=”chip ${outFilter==='all'?'active':''}” onclick=”outFilter='all';render()”>All</button>
+    <select class=”select-filter” onchange=”outFilter=this.value;render()”>
+      <option value=”all”>All customers</option>
+      ${custs.map(c=>`<option value=”${c}” ${outFilter===c?'selected':''}>${c}</option>`).join('')}
     </select>
   </div>
-  <div class="table-wrap">
+  <div class=”table-wrap”>
     <table>
       <thead><tr>
-        <th>Record #</th><th>Invoice #</th><th>Customer</th><th>Model</th>
-        <th>Core fee</th><th>Last bin pickup</th><th>Status</th><th></th>
+        <th>Invoice #</th><th>Related SO</th><th>Customer</th><th>Model</th>
+        <th>Qty</th><th>Core fee</th><th></th>
       </tr></thead>
       <tbody>
-        ${rows.length===0?`<tr><td colspan="8"><div class="empty"><div class="empty-icon">ðŸ“¦</div><div class="empty-text">No results</div></div></td></tr>`:
+        ${rows.length===0?`<tr><td colspan=”7”><div class=”empty”><div class=”empty-icon”>📦</div><div class=”empty-text”>No results</div></div></td></tr>`:
         rows.map(c=>{
-          const noPickup=!c.lastPickup;
-          const oldPickup=c.lastPickup&&new Date(c.lastPickup)<new Date('2025-01-01');
-          const pickupBadge=noPickup?'badge-danger':oldPickup?'badge-warn':'badge-green';
-          const pickupText=noPickup?'No pickup on record':fd(c.lastPickup);
-          return `<tr class="clickable" onclick="openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">
-            <td class="mono" style="color:var(--muted);font-size:12px">${c.soId}</td>
-            <td><span class="badge badge-blue">${c.so}</span></td>
-            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.customer}</td>
-            <td>${c.model?`<span class="code-pill">${c.model}</span>`:`<span style="color:var(--danger);font-size:12px">Unknown</span>`}</td>
-            <td class="mono" style="font-weight:500">${fc(c.fee)}</td>
-            <td><span class="badge ${pickupBadge}">${pickupText}</span></td>
-            <td><span class="badge badge-teal">Invoice</span></td>
-            <td><button class="action-btn" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">Log receipt</button></td>
+          return `<tr class=”clickable” onclick=”openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,”\\'”)}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')”>
+            <td><span class=”badge badge-blue”>${c.so}</span></td>
+            <td class=”mono” style=”font-size:12px”>${c.createdFrom||'<span style=”color:var(--muted)”>—</span>'}</td>
+            <td style=”max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap”>${c.customer}</td>
+            <td>${c.model?`<span class=”code-pill”>${c.model}</span>`:`<span style=”color:var(--danger);font-size:12px”>Unknown</span>`}</td>
+            <td class=”mono” style=”text-align:center”>${c.qtyOrdered||1}</td>
+            <td class=”mono” style=”font-weight:500”>${fc(c.fee)}</td>
+            <td><button class=”action-btn” onclick=”event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,”\\'”)}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')”>Log receipt</button></td>
           </tr>`;
         }).join('')}
       </tbody>
