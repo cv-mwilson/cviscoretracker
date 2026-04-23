@@ -207,7 +207,32 @@ function(search, record, log) {
         log.error({ title: 'Banked cores search error', details: bankErr.message });
       }
 
-      return { success: true, count: results.length, cores: results, incoming: incomingResults, banked: banked };
+      // ── Warranty Bin: Support Cases where custevent2 = 1, category = Warranty/Root Cause ──
+      var warrantyBin = [];
+      try {
+        var caseSearch = search.create({
+          type: 'supportcase',
+          filters: [
+            ['custevent2',  'anyof',  '1'],
+            'AND', ['category', 'anyof', '1', '2'] // update IDs: 1=Warranty, 2=Root Cause
+          ],
+          columns: ['casenumber', 'company', 'quicknote', 'custevent_cv_items', 'internalid']
+        });
+        caseSearch.run().each(function(r) {
+          warrantyBin.push({
+            id         : r.getValue('internalid'),
+            caseNumber : r.getValue('casenumber'),
+            company    : r.getText('company')            || '',
+            serialNum  : r.getValue('quicknote')          || '',
+            items      : r.getValue('custevent_cv_items') || ''
+          });
+          return true;
+        });
+      } catch(wErr) {
+        log.error({ title: 'Warranty bin search error', details: wErr.message });
+      }
+
+      return { success: true, count: results.length, cores: results, incoming: incomingResults, banked: banked, warrantyBin: warrantyBin };
 
     } catch (e) {
       log.error({ title: 'GET Error', details: e });
@@ -223,6 +248,19 @@ function(search, record, log) {
       var lineNum          = body.lineNum;
       var soNumber         = body.soNumber       || '';
       var coreBankRecordId = body.coreBankRecordId || null;
+
+      // ── case_move: flip custevent2 to 2 on a support case ─────────────────────
+      if (workflow === 'case_move') {
+        var caseId = body.caseId;
+        if (!caseId) return { success: false, error: 'caseId is required' };
+        record.submitFields({
+          type: 'supportcase',
+          id: caseId,
+          values: { custevent2: '2' },
+          options: { enableSourcing: true, ignoreMandatoryFields: true }
+        });
+        return { success: true, message: 'Case moved to next stage' };
+      }
 
       if (!soId) return { success: false, error: 'soId is required' };
 

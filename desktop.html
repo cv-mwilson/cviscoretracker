@@ -598,6 +598,10 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
       <svg viewBox="0 0 24 24"><path d="M12 2l0 20M2 12l10 10 10-10"/></svg>
       Cores from Pending Orders
     </div>
+    <div class="nav-item" onclick="switchTab('warrantybin',this)" id="nav-warrantybin">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Cores for Warranty Bin
+    </div>
     <div class="nav-section">Sales</div>
     <div class="nav-item" onclick="switchTab('binpickups',this)" id="nav-binpickups">
       <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
@@ -632,9 +636,10 @@ function fc(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maxim
 function ini(name){return name.split(/[\s\-]+/).filter(w=>/^[A-Z]/i.test(w)).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
 function fd(d){if(!d)return'â€”';return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
 
-let OUTSTANDING = [];
-let INCOMING   = [];
-let BANKED     = [];
+let OUTSTANDING   = [];
+let INCOMING      = [];
+let BANKED        = [];
+let WARRANTY_BIN  = [];
 
 async function loadOutstanding() {
   try {
@@ -692,6 +697,13 @@ async function loadOutstanding() {
         dateCreated: b.dateCreated,
         status     : b.status,
         notes      : b.notes
+      }));
+      WARRANTY_BIN = (data.warrantyBin || []).map(w => ({
+        id        : w.id,
+        caseNumber: w.caseNumber,
+        company   : w.company,
+        serialNum : w.serialNum,
+        items     : w.items
       }));
     }
   } catch(e) {
@@ -752,6 +764,7 @@ function render() {
   const a = document.getElementById('main-area');
   if (currentTab==='outstanding') a.innerHTML = renderOutstanding();
   else if (currentTab==='incoming') a.innerHTML = renderIncoming();
+  else if (currentTab==='warrantybin') a.innerHTML = renderWarrantyBin();
   else if (currentTab==='binpickups') a.innerHTML = renderCoreBinPickups();
   else if (currentTab==='banked') { if(drillCustomer) a.innerHTML=renderDrill(drillCustomer); else a.innerHTML=renderBanked(); }
   else a.innerHTML = renderCVIS();
@@ -808,6 +821,76 @@ function renderOutstanding() {
             <td><button class="action-btn" onclick="event.stopPropagation();openReceiveModal(${c.soId},'${c.lineNum}','${c.so}','${c.customer.replace(/'/g,"\\'")}','${c.model}',${c.fee},${c.qtyOrdered||1},${c.qtyReceived||0},'invoice')">Log receipt</button></td>
           </tr>`;
         }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+async function moveCaseToWarranty(caseId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Moving...';
+  try {
+    const res = await fetch('/api/cores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workflow: 'case_move', caseId: caseId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Case moved successfully');
+      await loadOutstanding();
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Move';
+      showToast('Error: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Move';
+    showToast('Error: ' + e.message);
+  }
+}
+
+function renderWarrantyBin() {
+  const custs = [...new Set(WARRANTY_BIN.map(c => c.company))].sort();
+  let rows = WARRANTY_BIN.filter(c => {
+    const q = outSearch.toLowerCase();
+    if (q && !(c.company + c.caseNumber + c.serialNum + c.items).toLowerCase().includes(q)) return false;
+    if (outFilter !== 'all' && c.company !== outFilter) return false;
+    return true;
+  });
+  return `<div class="content-header">
+    <div class="content-title">Cores for Warranty Bin <span class="content-title-badge">Support Cases</span></div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-lbl">Total cases</div><div class="metric-val">${WARRANTY_BIN.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Companies</div><div class="metric-val">${custs.length}</div></div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" type="search" placeholder="Search case, company, serial..." value="${outSearch}" oninput="outSearch=this.value;render()">
+    </div>
+    <button class="chip ${outFilter==='all'?'active':''}" onclick="outFilter='all';render()">All</button>
+    <select class="select-filter" onchange="outFilter=this.value;render()">
+      <option value="all">All companies</option>
+      ${custs.map(c=>`<option value="${c}" ${outFilter===c?'selected':''}>${c}</option>`).join('')}
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Case #</th><th>Company</th><th>Serial #</th><th>Items</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${rows.length===0?`<tr><td colspan="5"><div class="empty"><div class="empty-icon">ðŸ"¦</div><div class="empty-text">No results</div></div></td></tr>`:
+        rows.map(c=>`<tr>
+          <td><span class="badge badge-blue">${c.caseNumber}</span></td>
+          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.company}</td>
+          <td class="mono" style="font-size:12px">${c.serialNum||'-'}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.items||'-'}</td>
+          <td><button class="action-btn" onclick="moveCaseToWarranty('${c.id}',this)">Move</button></td>
+        </tr>`).join('')}
       </tbody>
     </table>
   </div>`;
