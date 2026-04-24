@@ -1203,6 +1203,7 @@ async function submitReceipt() {
   try {
     const res    = await fetch('/api/bin-pickup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
     const result = await res.json();
+    console.log('[CVIS] bin-pickup result:', JSON.stringify(result));
     if (result.success) {
       showToast('Core logged â€” ' + (result.results?.message || 'NetSuite updated.'));
       loadOutstanding();
