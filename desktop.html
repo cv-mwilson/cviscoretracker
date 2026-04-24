@@ -961,18 +961,22 @@ function openHoldLogModal() {
       <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
         <div class="modal-title">New Hold Log Entry</div>
         <div class="form-group">
-          <label class="form-label">Name</label>
+          <label class="form-label">Name <span style="color:var(--accent)">*</span></label>
           <input class="form-input" id="hl-name" type="text" placeholder="Hold log entry name">
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Date Rec'd</label>
+            <label class="form-label">Date Rec'd <span style="color:var(--accent)">*</span></label>
             <input class="form-input" id="hl-date" type="date" value="${today}">
           </div>
           <div class="form-group">
-            <label class="form-label">Serial #</label>
-            <input class="form-input" id="hl-serial" type="text" placeholder="Serial number">
+            <label class="form-label">Qty on Hold <span style="color:var(--accent)">*</span></label>
+            <input class="form-input" id="hl-qty" type="number" min="1" placeholder="1">
           </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Serial #</label>
+          <input class="form-input" id="hl-serial" type="text" placeholder="Serial number">
         </div>
         <div class="form-group">
           <label class="form-label">Item on HOLD</label>
@@ -982,35 +986,13 @@ function openHoldLogModal() {
           <label class="form-label">Corresponding Customer</label>
           <input class="form-input" id="hl-customer" type="text" placeholder="Customer name (searches NetSuite)">
         </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Corresponding Document</label>
-            <input class="form-input" id="hl-doc" type="text" placeholder="SO25537 or INV5763">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Qty on Hold</label>
-            <input class="form-input" id="hl-qty" type="number" min="1" placeholder="1">
-          </div>
-        </div>
         <div class="form-group">
-          <label class="form-label">Approximate $ Value</label>
-          <input class="form-input" id="hl-value" type="number" min="0" step="0.01" placeholder="0.00">
+          <label class="form-label">Corresponding Document</label>
+          <input class="form-input" id="hl-doc" type="text" placeholder="SO25537 or INV5763">
         </div>
         <div class="form-group">
           <label class="form-label">OPS Comments</label>
           <textarea class="form-input" id="hl-ops" rows="3" style="resize:vertical" placeholder="Operations notes..."></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Sales Comments</label>
-          <textarea class="form-input" id="hl-sales" rows="3" style="resize:vertical" placeholder="Sales notes..."></textarea>
-        </div>
-        <div style="display:flex;gap:24px;margin-bottom:16px">
-          <label style="display:flex;align-items:center;gap:8px;font-family:var(--head);font-size:13px;font-weight:600;color:var(--text);cursor:pointer">
-            <input type="checkbox" id="hl-moved" style="width:16px;height:16px"> Moved Off Hold Shelf
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-family:var(--head);font-size:13px;font-weight:600;color:var(--text);cursor:pointer">
-            <input type="checkbox" id="hl-reviewed" style="width:16px;height:16px"> Sales Reviewed?
-          </label>
         </div>
         <div class="btn-row">
           <button class="btn-secondary" onclick="closeModal()">Cancel</button>
@@ -1021,19 +1003,22 @@ function openHoldLogModal() {
 }
 
 async function submitHoldLog() {
+  const name = document.getElementById('hl-name').value.trim();
+  const date = document.getElementById('hl-date').value;
+  const qty  = document.getElementById('hl-qty').value;
+  if (!name || !date || !qty) {
+    showToast('Name, Date Rec\'d, and Qty are required');
+    return;
+  }
   const payload = {
-    name          : document.getElementById('hl-name').value.trim(),
-    dateReceived  : document.getElementById('hl-date').value,
+    name          : name,
+    dateReceived  : date,
+    qty           : qty,
     serial        : document.getElementById('hl-serial').value.trim(),
     itemName      : document.getElementById('hl-item').value.trim(),
     customerName  : document.getElementById('hl-customer').value.trim(),
     documentNumber: document.getElementById('hl-doc').value.trim(),
-    qty           : document.getElementById('hl-qty').value,
-    approxValue   : document.getElementById('hl-value').value,
-    opsComments   : document.getElementById('hl-ops').value.trim(),
-    salesComments : document.getElementById('hl-sales').value.trim(),
-    movedOffHold  : document.getElementById('hl-moved').checked,
-    salesReviewed : document.getElementById('hl-reviewed').checked
+    opsComments   : document.getElementById('hl-ops').value.trim()
   };
   closeModal();
   showToast('Creating hold log entry...');
