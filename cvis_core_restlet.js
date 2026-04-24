@@ -343,6 +343,7 @@ function(search, record, log) {
         }
 
         var hlRec = record.create({ type: 'customrecord1535' });
+        if (body.name)          hlRec.setValue({ fieldId: 'name',          value: body.name });
         if (body.opsComments)   hlRec.setValue({ fieldId: 'custrecord180', value: body.opsComments });
         if (body.salesComments) hlRec.setValue({ fieldId: 'custrecord182', value: body.salesComments });
         hlRec.setValue({ fieldId: 'custrecord183', value: !!body.movedOffHold });
