@@ -342,7 +342,9 @@ function(search, record, log) {
           } catch(docErr) { log.error({ title: 'Document lookup error', details: docErr.message }); }
         }
 
-        var hlRec = record.create({ type: 'customrecord1535' });
+        log.audit({ title: 'create_hold_log', details: 'name=' + body.name + ' workflow=' + body.workflow });
+
+        var hlRec = record.create({ type: 'customrecord1535', isDynamic: true });
         if (body.name)          hlRec.setValue({ fieldId: 'name',          value: body.name });
         if (body.opsComments)   hlRec.setValue({ fieldId: 'custrecord180', value: body.opsComments });
         if (body.salesComments) hlRec.setValue({ fieldId: 'custrecord182', value: body.salesComments });
@@ -356,7 +358,7 @@ function(search, record, log) {
         if (body.serial)        hlRec.setValue({ fieldId: 'custrecord191', value: body.serial });
         hlRec.setValue({ fieldId: 'custrecord192', value: !!body.salesReviewed });
 
-        var newHlId = hlRec.save();
+        var newHlId = hlRec.save({ ignoreMandatoryFields: false });
         return {
           success  : true,
           id       : newHlId,
