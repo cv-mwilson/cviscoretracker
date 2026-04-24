@@ -602,6 +602,10 @@ tr.clickable:hover td { background: rgba(0,212,170,0.04); }
       <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       Cores for Warranty Bin
     </div>
+    <div class="nav-item" onclick="switchTab('holdlog',this)" id="nav-holdlog">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+      Hold Log
+    </div>
     <div class="nav-section">Sales</div>
     <div class="nav-item" onclick="switchTab('binpickups',this)" id="nav-binpickups">
       <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
@@ -640,6 +644,7 @@ let OUTSTANDING   = [];
 let INCOMING      = [];
 let BANKED        = [];
 let WARRANTY_BIN  = [];
+let HOLD_LOG      = [];
 
 async function loadOutstanding() {
   try {
@@ -706,6 +711,20 @@ async function loadOutstanding() {
         serialNum : w.serialNum,
         items     : w.items
       }));
+      HOLD_LOG = (data.holdLog || []).map(h => ({
+        id           : h.id,
+        opsComments  : h.opsComments,
+        salesComments: h.salesComments,
+        movedOffHold : h.movedOffHold,
+        dateReceived : h.dateReceived,
+        item         : h.item,
+        customer     : h.customer,
+        approxValue  : h.approxValue,
+        qty          : h.qty,
+        document     : h.document,
+        serial       : h.serial,
+        salesReviewed: h.salesReviewed
+      }));
     }
   } catch(e) {
     console.error('Failed to load cores:', e);
@@ -766,6 +785,7 @@ function render() {
   if (currentTab==='outstanding') a.innerHTML = renderOutstanding();
   else if (currentTab==='incoming') a.innerHTML = renderIncoming();
   else if (currentTab==='warrantybin') a.innerHTML = renderWarrantyBin();
+  else if (currentTab==='holdlog') a.innerHTML = renderHoldLog();
   else if (currentTab==='binpickups') a.innerHTML = renderCoreBinPickups();
   else if (currentTab==='banked') { if(drillCustomer) a.innerHTML=renderDrill(drillCustomer); else a.innerHTML=renderBanked(); }
   else a.innerHTML = renderCVIS();
@@ -895,6 +915,138 @@ function renderWarrantyBin() {
       </tbody>
     </table>
   </div>`;
+}
+
+function renderHoldLog() {
+  const totalValue = HOLD_LOG.reduce((a, r) => a + (parseFloat(r.approxValue) || 0), 0);
+  const onHold = HOLD_LOG.filter(r => !r.movedOffHold).length;
+  return `<div class="content-header">
+    <div class="content-title">Hold Log <span class="content-title-badge">customrecord1535</span></div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-lbl">Total entries</div><div class="metric-val">${HOLD_LOG.length}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Still on hold</div><div class="metric-val">${onHold}</div></div>
+      <div class="metric-card"><div class="metric-lbl">Total value</div><div class="metric-val">${fc(totalValue)}</div></div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div style="flex:1"></div>
+    <button class="btn-primary" onclick="openHoldLogModal()">+ New Entry</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Date Rec'd</th><th>Customer</th><th>Item</th><th>Serial #</th><th>Qty</th><th>Value</th><th>Status</th>
+      </tr></thead>
+      <tbody>
+        ${HOLD_LOG.length === 0
+          ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">No hold log entries</div></div></td></tr>`
+          : HOLD_LOG.map(r => `<tr>
+              <td class="mono" style="font-size:12px;white-space:nowrap">${r.dateReceived || '&mdash;'}</td>
+              <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.customer || '&mdash;'}</td>
+              <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.item || '&mdash;'}</td>
+              <td class="mono" style="font-size:12px">${r.serial || '&mdash;'}</td>
+              <td class="mono">${r.qty || '&mdash;'}</td>
+              <td class="mono">${r.approxValue ? fc(parseFloat(r.approxValue)) : '&mdash;'}</td>
+              <td style="white-space:nowrap">
+                ${r.movedOffHold ? '<span class="badge badge-green">Off Hold</span>' : '<span class="badge badge-warn">On Hold</span>'}
+                ${r.salesReviewed ? ' <span class="badge badge-green">Reviewed</span>' : ''}
+              </td>
+            </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function openHoldLogModal() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+        <div class="modal-title">New Hold Log Entry</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Date Rec'd</label>
+            <input class="form-input" id="hl-date" type="date" value="${today}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Serial #</label>
+            <input class="form-input" id="hl-serial" type="text" placeholder="Serial number">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Item on HOLD</label>
+          <input class="form-input" id="hl-item" type="text" placeholder="Item name (searches NetSuite)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Corresponding Customer</label>
+          <input class="form-input" id="hl-customer" type="text" placeholder="Customer name (searches NetSuite)">
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Corresponding Document</label>
+            <input class="form-input" id="hl-doc" type="text" placeholder="SO25537 or INV5763">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Qty on Hold</label>
+            <input class="form-input" id="hl-qty" type="number" min="1" placeholder="1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Approximate $ Value</label>
+          <input class="form-input" id="hl-value" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">OPS Comments</label>
+          <textarea class="form-input" id="hl-ops" rows="3" style="resize:vertical" placeholder="Operations notes..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sales Comments</label>
+          <textarea class="form-input" id="hl-sales" rows="3" style="resize:vertical" placeholder="Sales notes..."></textarea>
+        </div>
+        <div style="display:flex;gap:24px;margin-bottom:16px">
+          <label style="display:flex;align-items:center;gap:8px;font-family:var(--head);font-size:13px;font-weight:600;color:var(--text);cursor:pointer">
+            <input type="checkbox" id="hl-moved" style="width:16px;height:16px"> Moved Off Hold Shelf
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-family:var(--head);font-size:13px;font-weight:600;color:var(--text);cursor:pointer">
+            <input type="checkbox" id="hl-reviewed" style="width:16px;height:16px"> Sales Reviewed?
+          </label>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn-primary" onclick="submitHoldLog()">Create Entry</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function submitHoldLog() {
+  const payload = {
+    dateReceived  : document.getElementById('hl-date').value,
+    serial        : document.getElementById('hl-serial').value.trim(),
+    itemName      : document.getElementById('hl-item').value.trim(),
+    customerName  : document.getElementById('hl-customer').value.trim(),
+    documentNumber: document.getElementById('hl-doc').value.trim(),
+    qty           : document.getElementById('hl-qty').value,
+    approxValue   : document.getElementById('hl-value').value,
+    opsComments   : document.getElementById('hl-ops').value.trim(),
+    salesComments : document.getElementById('hl-sales').value.trim(),
+    movedOffHold  : document.getElementById('hl-moved').checked,
+    salesReviewed : document.getElementById('hl-reviewed').checked
+  };
+  closeModal();
+  showToast('Creating hold log entry...');
+  try {
+    const res    = await fetch('/api/hold-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Hold log entry created');
+      await loadOutstanding();
+    } else {
+      showToast('Error: ' + (result.error || 'Unknown error'));
+    }
+  } catch(e) {
+    showToast('Request failed: ' + e.message);
+  }
 }
 
 function renderCoreBinPickups() {

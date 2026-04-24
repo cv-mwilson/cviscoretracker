@@ -235,7 +235,48 @@ function(search, record, log) {
         log.error({ title: 'Warranty bin search error', details: wErr.message });
       }
 
-      return { success: true, count: results.length, cores: results, incoming: incomingResults, banked: banked, warrantyBin: warrantyBin, _warrantyDebug: { count: warrantyBin.length, error: warrantyErr } };
+      // ── Hold Log: customrecord1535 ───────────────────────────────────────────
+      var holdLog = [];
+      try {
+        search.create({
+          type: 'customrecord1535',
+          filters: [],
+          columns: [
+            'internalid',
+            'custrecord180', // OPS Comments
+            'custrecord182', // Sales Comments
+            'custrecord183', // Moved Off Hold Shelf
+            'custrecord184', // Date Rec'd
+            'custrecord185', // Item on HOLD
+            'custrecord186', // Corresponding Customer
+            'custrecord187', // Approximate $ Value
+            'custrecord188', // Qty on Hold
+            'custrecord189', // Corresponding Document
+            'custrecord191', // Serial #
+            'custrecord192'  // Sales Reviewed?
+          ]
+        }).run().each(function(r) {
+          holdLog.push({
+            id           : r.getValue('internalid'),
+            opsComments  : r.getValue('custrecord180') || '',
+            salesComments: r.getValue('custrecord182') || '',
+            movedOffHold : r.getValue('custrecord183') === 'T',
+            dateReceived : r.getValue('custrecord184') || '',
+            item         : r.getText('custrecord185')  || r.getValue('custrecord185') || '',
+            customer     : r.getText('custrecord186')  || r.getValue('custrecord186') || '',
+            approxValue  : r.getValue('custrecord187') || '',
+            qty          : r.getValue('custrecord188') || '',
+            document     : r.getText('custrecord189')  || r.getValue('custrecord189') || '',
+            serial       : r.getValue('custrecord191') || '',
+            salesReviewed: r.getValue('custrecord192') === 'T'
+          });
+          return true;
+        });
+      } catch (hlErr) {
+        log.error({ title: 'Hold log search error', details: hlErr.message });
+      }
+
+      return { success: true, count: results.length, cores: results, incoming: incomingResults, banked: banked, warrantyBin: warrantyBin, holdLog: holdLog, _warrantyDebug: { count: warrantyBin.length, error: warrantyErr } };
 
     } catch (e) {
       log.error({ title: 'GET Error', details: e });
@@ -263,6 +304,62 @@ function(search, record, log) {
           options: { enableSourcing: true, ignoreMandatoryFields: true }
         });
         return { success: true, message: 'Case moved to next stage' };
+      }
+
+      // ── create_hold_log: create customrecord1535 ───────────────────────────
+      if (workflow === 'create_hold_log') {
+        var resolvedItemId = null, resolvedCustomerId = null, resolvedDocId = null;
+
+        if (body.itemName) {
+          try {
+            search.create({
+              type: search.Type.ITEM,
+              filters: [['displayname', 'contains', body.itemName]],
+              columns: ['internalid']
+            }).run().each(function(r) { resolvedItemId = r.getValue('internalid'); return false; });
+          } catch(itemErr) { log.error({ title: 'Item lookup error', details: itemErr.message }); }
+        }
+
+        if (body.customerName) {
+          try {
+            search.create({
+              type: search.Type.CUSTOMER,
+              filters: [['entityid', 'contains', body.customerName], 'OR', ['companyname', 'contains', body.customerName]],
+              columns: ['internalid']
+            }).run().each(function(r) { resolvedCustomerId = r.getValue('internalid'); return false; });
+          } catch(custErr) { log.error({ title: 'Customer lookup error', details: custErr.message }); }
+        }
+
+        if (body.documentNumber) {
+          try {
+            search.create({
+              type: search.Type.TRANSACTION,
+              filters: [['tranid', 'is', body.documentNumber]],
+              columns: ['internalid']
+            }).run().each(function(r) { resolvedDocId = r.getValue('internalid'); return false; });
+          } catch(docErr) { log.error({ title: 'Document lookup error', details: docErr.message }); }
+        }
+
+        var hlRec = record.create({ type: 'customrecord1535' });
+        if (body.opsComments)   hlRec.setValue({ fieldId: 'custrecord180', value: body.opsComments });
+        if (body.salesComments) hlRec.setValue({ fieldId: 'custrecord182', value: body.salesComments });
+        hlRec.setValue({ fieldId: 'custrecord183', value: !!body.movedOffHold });
+        if (body.dateReceived)  hlRec.setValue({ fieldId: 'custrecord184', value: new Date(body.dateReceived) });
+        if (resolvedItemId)     hlRec.setValue({ fieldId: 'custrecord185', value: resolvedItemId });
+        if (resolvedCustomerId) hlRec.setValue({ fieldId: 'custrecord186', value: resolvedCustomerId });
+        if (body.approxValue)   hlRec.setValue({ fieldId: 'custrecord187', value: parseFloat(body.approxValue) });
+        if (body.qty)           hlRec.setValue({ fieldId: 'custrecord188', value: parseInt(body.qty) });
+        if (resolvedDocId)      hlRec.setValue({ fieldId: 'custrecord189', value: resolvedDocId });
+        if (body.serial)        hlRec.setValue({ fieldId: 'custrecord191', value: body.serial });
+        hlRec.setValue({ fieldId: 'custrecord192', value: !!body.salesReviewed });
+
+        var newHlId = hlRec.save();
+        return {
+          success  : true,
+          id       : newHlId,
+          message  : 'Hold log entry created',
+          resolved : { item: !!resolvedItemId, customer: !!resolvedCustomerId, document: !!resolvedDocId }
+        };
       }
 
       if (!soId) return { success: false, error: 'soId is required' };
