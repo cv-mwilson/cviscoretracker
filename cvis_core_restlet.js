@@ -308,23 +308,25 @@ function(search, record, log) {
         return { success: false, error: 'Could not find matching line ' + lineNum + ' on record ' + soId };
       }
 
-      // ── 2. Add user note to the transaction (usernotes sublist) ───────────
+      soRec.save({ enableSourcing: true, ignoreMandatoryFields: true });
+      results.soUpdated = true;
+      log.audit({ title: 'Core received stamped', details: soNumber });
+
+      // ── 2. Add user note to the transaction (note record) ─────────────────
       try {
-        soRec.selectNewLine({ sublistId: 'usernotes' });
-        soRec.setCurrentSublistValue({ sublistId: 'usernotes', fieldId: 'title',    value: 'Core Receipt Logged' });
-        soRec.setCurrentSublistValue({ sublistId: 'usernotes', fieldId: 'note',     value: noteText });
-        soRec.setCurrentSublistValue({ sublistId: 'usernotes', fieldId: 'notedate', value: today });
-        soRec.commitLine({ sublistId: 'usernotes' });
+        var noteRec = record.create({ type: 'note' });
+        noteRec.setValue({ fieldId: 'transaction', value: soId });
+        noteRec.setValue({ fieldId: 'title',       value: 'Core Receipt Logged' });
+        noteRec.setValue({ fieldId: 'note',        value: noteText });
+        noteRec.setValue({ fieldId: 'notedate',    value: today });
+        noteRec.save();
         results.noteAdded = true;
+        log.audit({ title: 'Note added to transaction', details: soId });
       } catch (noteErr) {
         log.error({ title: 'Note creation error', details: noteErr.message });
         results.noteAdded = false;
         results.noteError = noteErr.message;
       }
-
-      soRec.save({ enableSourcing: true, ignoreMandatoryFields: true });
-      results.soUpdated = true;
-      log.audit({ title: 'Core received + note saved', details: soNumber });
 
       // ── 4. Flip Core Bank record status to "Applied" ───────────────────────
       if (coreBankRecordId) {
