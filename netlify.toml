@@ -20,3 +20,8 @@
   from = "/api/bank-draw"
   to   = "/.netlify/functions/bank-draw"
   status = 200
+
+[[redirects]]
+  from = "/api/hold-log"
+  to   = "/.netlify/functions/hold-log"
+  status = 200
