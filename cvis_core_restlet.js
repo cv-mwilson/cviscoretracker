@@ -243,6 +243,7 @@ function(search, record, log) {
           filters: [['custrecord183', 'is', 'F']],
           columns: [
             'internalid',
+            'name',
             'custrecord180', // OPS Comments
             'custrecord182', // Sales Comments
             'custrecord183', // Moved Off Hold Shelf
@@ -258,6 +259,7 @@ function(search, record, log) {
         }).run().each(function(r) {
           holdLog.push({
             id           : r.getValue('internalid'),
+            name         : r.getValue('name') || '',
             opsComments  : r.getValue('custrecord180') || '',
             salesComments: r.getValue('custrecord182') || '',
             movedOffHold : r.getValue('custrecord183') === 'T',

@@ -713,6 +713,7 @@ async function loadOutstanding() {
       }));
       HOLD_LOG = (data.holdLog || []).map(h => ({
         id           : h.id,
+        name         : h.name,
         opsComments  : h.opsComments,
         salesComments: h.salesComments,
         movedOffHold : h.movedOffHold,
@@ -935,22 +936,18 @@ function renderHoldLog() {
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>Date Rec'd</th><th>Customer</th><th>Item</th><th>Serial #</th><th>Qty</th><th>Value</th><th>Status</th>
+        <th>Date Rec'd</th><th>Summary</th><th>Customer</th><th>Item</th><th>Serial #</th><th>Qty</th>
       </tr></thead>
       <tbody>
         ${HOLD_LOG.length === 0
-          ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">No hold log entries</div></div></td></tr>`
+          ? `<tr><td colspan="6"><div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-text">No hold log entries</div></div></td></tr>`
           : HOLD_LOG.map(r => `<tr>
               <td class="mono" style="font-size:12px;white-space:nowrap">${r.dateReceived || '&mdash;'}</td>
+              <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name || '&mdash;'}</td>
               <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.customer || '&mdash;'}</td>
               <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.item || '&mdash;'}</td>
               <td class="mono" style="font-size:12px">${r.serial || '&mdash;'}</td>
               <td class="mono">${r.qty || '&mdash;'}</td>
-              <td class="mono">${r.approxValue ? fc(parseFloat(r.approxValue)) : '&mdash;'}</td>
-              <td style="white-space:nowrap">
-                ${r.movedOffHold ? '<span class="badge badge-green">Off Hold</span>' : '<span class="badge badge-warn">On Hold</span>'}
-                ${r.salesReviewed ? ' <span class="badge badge-green">Reviewed</span>' : ''}
-              </td>
             </tr>`).join('')}
       </tbody>
     </table>
