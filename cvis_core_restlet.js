@@ -240,7 +240,7 @@ function(search, record, log) {
       try {
         search.create({
           type: 'customrecord1535',
-          filters: [],
+          filters: [['custrecord183', 'is', 'F']],
           columns: [
             'internalid',
             'custrecord180', // OPS Comments
